@@ -19,6 +19,9 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
+        'telp',
+        'role',
         'email',
         'password',
     ];
@@ -41,4 +44,20 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Get the detail peserta associated with the user.
+     */
+    public function detailPeserta()
+    {
+        return $this->hasOne(DetailPeserta::class);
+    }
+
+    /**
+     * Get the detail admin associated with the user.
+     */
+    public function detailAdmin()
+    {
+        return $this->hasOne(DetailAdmin::class);
+    }
 }
