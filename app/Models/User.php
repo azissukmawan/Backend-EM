@@ -6,11 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -57,5 +58,10 @@ class User extends Authenticatable
     public function detailAdmin()
     {
         return $this->hasOne(DetailAdmin::class);
+    }
+
+    public function otps()
+    {
+        return $this->hasMany(Otp::class);
     }
 }
