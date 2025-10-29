@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             DetailPesertaSeeder::class,
             DetailAdminSeeder::class,
+            ModulAcaraSeeder::class,
         ]);
     }
 }
