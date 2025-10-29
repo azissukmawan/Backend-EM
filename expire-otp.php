@@ -20,7 +20,7 @@ if ($otp) {
         ->update([
             'expires_at' => date('Y-m-d H:i:s', strtotime('-1 minute'))
         ]);
-    
+
     echo "\n✅ OTP has been set to EXPIRED\n";
     echo "Code: " . $otp->code . "\n";
     echo "Email: ";
