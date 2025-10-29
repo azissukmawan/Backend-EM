@@ -56,15 +56,15 @@
         <div class="header">
             <h1>Email Verification</h1>
         </div>
-        
+
         <p>Hello <strong>{{ $userName }}</strong>,</p>
-        
+
         <p>Thank you for registering! To complete your registration, please use the following OTP code:</p>
-        
+
         <div class="otp-code">
             {{ $otpCode }}
         </div>
-        
+
         <div class="info">
             <p><strong>Important:</strong></p>
             <ul>
@@ -73,7 +73,7 @@
                 <li>If you didn't request this code, please ignore this email</li>
             </ul>
         </div>
-        
+
         <div class="footer">
             <p>This is an automated message, please do not reply to this email.</p>
             <p>&copy; {{ date('Y') }} Event Management System. All rights reserved.</p>

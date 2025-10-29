@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Otp;
 use App\Mail\OtpMail;
+use App\Mail\ResetPasswordMail;
 use App\Models\DetailPeserta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -291,6 +294,140 @@ class AuthController extends Controller
             'data' => [
                 'user' => $request->user()
             ]
+        ], 200);
+    }
+
+    /**
+     * Forgot Password - Send reset link
+     */
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        // Generate random token
+        $token = Str::random(60);
+
+        // Hapus token lama jika ada
+        DB::table('password_resets')->where('email', $request->email)->delete();
+
+        // Simpan token baru
+        DB::table('password_resets')->insert([
+            'email' => $request->email,
+            'token' => Hash::make($token),
+            'created_at' => Carbon::now()
+        ]);
+
+        // Buat reset link (ganti dengan URL frontend kamu)
+        $resetLink = env('FRONTEND_URL', 'http://localhost:3000') . '/reset-password?token=' . $token . '&email=' . urlencode($request->email);
+
+        // Kirim email
+        try {
+            Mail::to($user->email)->send(new ResetPasswordMail($resetLink, $user->name));
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send reset password email',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password reset link has been sent to your email'
+        ], 200);
+    }
+
+    /**
+     * Reset Password
+     */
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Cari token di database
+        $passwordReset = DB::table('password_resets')
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$passwordReset) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid reset token'
+            ], 400);
+        }
+
+        // Cek apakah token sudah expired (60 menit)
+        $createdAt = Carbon::parse($passwordReset->created_at);
+        if ($createdAt->addMinutes(60)->isPast()) {
+            DB::table('password_resets')->where('email', $request->email)->delete();
+            return response()->json([
+                'success' => false,
+                'message' => 'Reset token has expired'
+            ], 400);
+        }
+
+        // Verifikasi token
+        if (!Hash::check($request->token, $passwordReset->token)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid reset token'
+            ], 400);
+        }
+
+        // Update password user
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        // Update hanya password, jangan update field lain
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Hapus token reset password dari tabel password_resets
+        DB::table('password_resets')->where('email', $request->email)->delete();
+
+        // Revoke semua access token Sanctum (logout dari semua device)
+        $user->tokens()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password has been reset successfully'
         ], 200);
     }
 }

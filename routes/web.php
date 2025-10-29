@@ -13,3 +13,11 @@ Route::get('/preview-otp-email', function () {
         'userName' => 'John Doe'
     ]);
 });
+
+// Preview Reset Password Email Template
+Route::get('/preview-reset-password-email', function () {
+    return view('emails.reset-password', [
+        'resetLink' => 'http://localhost:3000/reset-password?token=sample_token_here&email=user@example.com',
+        'userName' => 'John Doe'
+    ]);
+});
