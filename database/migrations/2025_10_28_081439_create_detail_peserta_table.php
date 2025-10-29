@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('detail_peserta', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->string('foto');
+            $table->string('foto')->nullable();
             $table->boolean('status_karyawan');
             $table->timestamps();
 

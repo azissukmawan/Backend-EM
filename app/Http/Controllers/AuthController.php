@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Otp;
 use App\Mail\OtpMail;
+use App\Models\DetailPeserta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -24,7 +25,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'telp' => 'required|string|max:20',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:superadmin,peserta',
+            'status_karyawan' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -42,8 +43,15 @@ class AuthController extends Controller
             'email' => $request->email,
             'telp' => $request->telp,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role' => 'peserta',
         ]);
+
+        DetailPeserta::create([
+            'user_id' => $user->id,
+            'status_karyawan' => $request->status_karyawan,
+            'foto' => null,
+        ]);
+
 
         // Generate OTP code
         $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -207,7 +215,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'login' => 'required|string', // Bisa email atau username
             'password' => 'required|string',
         ]);
 
@@ -219,7 +227,10 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user = User::where('email', $request->email)->first();
+        // Cek apakah login menggunakan email atau username
+        $loginField = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $user = User::where($loginField, $request->login)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
