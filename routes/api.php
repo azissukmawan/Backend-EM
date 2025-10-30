@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ModulAcaraController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\DashboardAdminController;
 
@@ -31,6 +32,13 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    Route::get('/events', [ModulAcaraController::class, 'index']);
+
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'getProfile']);
+        Route::post('/update', [ProfileController::class, 'updateProfile']);
+        Route::post('/change-password', [ProfileController::class, 'changePassword']);
+    });
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
     
