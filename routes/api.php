@@ -7,6 +7,7 @@ use App\Http\Controllers\ModulAcaraController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\DashboardAdminController;
+use App\Http\Controllers\DashboardController;
 
 // Public routes - Landing Page Events
 Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
@@ -36,8 +37,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [ProfileController::class, 'getProfile']);
         Route::post('/update', [ProfileController::class, 'updateProfile']);
         Route::post('/change-password', [ProfileController::class, 'changePassword']);
+
+        Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/dashboard/events/{identifier}', [DashboardController::class, 'show']);
     });
     
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
+
+    Route::get('/events', [ModulAcaraController::class, 'index']);
 });
