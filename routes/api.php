@@ -30,13 +30,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
-    // Tambahan untuk CRUD superadmin:
-    Route::post('/admin/events', [ModulAcaraController::class, 'store']); // create acara
-    Route::put('/admin/events/{id}', [ModulAcaraController::class, 'update']); // update acara
-    Route::delete('/admin/events/{id}', [ModulAcaraController::class, 'destroy']); // delete acara
-    
+    // CRUD superadmin
+    Route::post('/admin/events', [ModulAcaraController::class, 'store']);
+    Route::put('/admin/events/{id}', [ModulAcaraController::class, 'update']);
+    Route::delete('/admin/events/{id}', [ModulAcaraController::class, 'destroy']);
+    // Peserta routes atau GET biasa
     Route::get('/events', [ModulAcaraController::class, 'index']);
 });

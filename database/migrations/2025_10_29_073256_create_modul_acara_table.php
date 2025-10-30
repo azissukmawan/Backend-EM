@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('mdl_slug', 180)->unique();                // untuk URL publik
             $table->string('mdl_nama', 150);
             $table->text('mdl_deskripsi');
+            $table->boolean('is_public')->default(true);  // tampil di publik?
 
             // Tipe pelaksanaan
             $table->enum('mdl_tipe', ['online', 'offline', 'hybrid']);
@@ -36,7 +37,8 @@ return new class extends Migration
             $table->dateTime('mdl_pendaftaran_mulai');
             $table->dateTime('mdl_pendaftaran_selesai');
             $table->unsignedInteger('mdl_maks_peserta_eksternal')->nullable();
-
+            $table->unsignedInteger('mdl_maks_peserta_offline')->nullable();
+            $table->unsignedInteger('mdl_maks_peserta_online')->nullable();
 
             // Jadwal utama event
             $table->dateTime('mdl_acara_mulai');
