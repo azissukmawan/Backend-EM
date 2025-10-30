@@ -328,7 +328,6 @@ GET /api/events/past
 - Event history / archive page
 - Past event gallery / documentation
 - Recap section untuk review event
-- Alumni event tracking
 - Event portfolio
 
 ---
@@ -605,7 +604,6 @@ curl -X GET http://localhost:8000/api/events/rapat-koordinator-2025 \
 ## Support
 
 Untuk pertanyaan atau issue terkait API, silakan hubungi:
-- **Email:** developer@airnav.co.id
 - **GitHub:** https://github.com/Event-Management-airnav/Backend-EM
 
 ---

@@ -185,6 +185,21 @@ class AuthController extends Controller
             ], 400);
         }
 
+        // Cek apakah ada OTP yang baru saja dikirim dalam 2 menit terakhir
+        $lastOtp = Otp::where('user_id', $user->id)
+            ->where('created_at', '>', Carbon::now()->subMinutes(2))
+            ->latest()
+            ->first();
+
+        if ($lastOtp) {
+            $waitTime = Carbon::now()->diffInSeconds($lastOtp->created_at->addMinutes(2));
+            return response()->json([
+                'success' => false,
+                'message' => 'Please wait before requesting a new OTP',
+                'wait_seconds' => $waitTime
+            ], 429);
+        }
+
         // Generate OTP code baru
         $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
@@ -235,19 +250,56 @@ class AuthController extends Controller
 
         $user = User::where($loginField, $request->login)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
+        // Cek apakah akun terkunci
+        if ($user->isLocked()) {
+            $lockRemaining = Carbon::now()->diffInMinutes($user->locked_until);
+            return response()->json([
+                'success' => false,
+                'message' => 'Account is temporarily locked due to too many failed login attempts',
+                'locked_until' => $user->locked_until->toDateTimeString(),
+                'minutes_remaining' => $lockRemaining
+            ], 423);
+        }
+
+        // Verifikasi password
+        if (!Hash::check($request->password, $user->password)) {
+            // Increment failed login attempts
+            $user->incrementFailedLoginAttempts();
+
+            $remainingAttempts = 5 - $user->failed_login_attempts;
+
+            if ($user->isLocked()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Too many failed login attempts. Account locked for 15 minutes.',
+                    'locked_until' => $user->locked_until->toDateTimeString()
+                ], 423);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials',
+                'remaining_attempts' => max(0, $remainingAttempts)
+            ], 401);
+        }
+
+        // Cek email verification
         if (!$user->email_verified_at) {
             return response()->json([
                 'success' => false,
                 'message' => 'Please verify your email first'
             ], 403);
         }
+
+        // Login berhasil - reset failed attempts
+        $user->resetFailedLoginAttempts();
 
         // Buat token menggunakan Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;

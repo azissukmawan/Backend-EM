@@ -21,9 +21,9 @@ class EventController extends Controller
             $events = ModulAcara::where('is_public', true)
                 ->where('mdl_status', 'active')
                 ->where('mdl_acara_mulai', '<=', $now)
-                ->where(function($query) use ($now) {
+                ->where(function ($query) use ($now) {
                     $query->whereNull('mdl_acara_selesai')
-                          ->orWhere('mdl_acara_selesai', '>=', $now);
+                        ->orWhere('mdl_acara_selesai', '>=', $now);
                 })
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
@@ -55,7 +55,6 @@ class EventController extends Controller
                     'description' => 'Event yang sedang aktif/berlangsung saat ini'
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -110,7 +109,6 @@ class EventController extends Controller
                     'description' => 'Event yang akan datang (belum dimulai)'
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -131,14 +129,14 @@ class EventController extends Controller
             $now = Carbon::now();
 
             $events = ModulAcara::where('is_public', true)
-                ->where(function($query) use ($now) {
+                ->where(function ($query) use ($now) {
                     // Event yang punya tanggal selesai dan sudah lewat
                     $query->where('mdl_acara_selesai', '<', $now)
-                          // ATAU event yang mulai > 1 hari lalu tapi tidak ada tanggal selesai
-                          ->orWhere(function($q) use ($now) {
-                              $q->whereNull('mdl_acara_selesai')
+                        // ATAU event yang mulai > 1 hari lalu tapi tidak ada tanggal selesai
+                        ->orWhere(function ($q) use ($now) {
+                            $q->whereNull('mdl_acara_selesai')
                                 ->where('mdl_acara_mulai', '<', $now->copy()->subDay());
-                          });
+                        });
                 })
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
@@ -174,7 +172,6 @@ class EventController extends Controller
                     'description' => 'Event yang sudah selesai'
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -237,7 +234,6 @@ class EventController extends Controller
                     'description' => 'Semua event public (tanpa filter status)'
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -330,7 +326,6 @@ class EventController extends Controller
                     'event' => $eventDetail
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
