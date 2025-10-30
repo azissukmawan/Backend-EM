@@ -32,15 +32,12 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
-    Route::get('/events', [ModulAcaraController::class, 'index']);
-
     Route::prefix('profile')->group(function () {
         Route::get('/', [ProfileController::class, 'getProfile']);
         Route::post('/update', [ProfileController::class, 'updateProfile']);
         Route::post('/change-password', [ProfileController::class, 'changePassword']);
     });
+    
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
-    
-    Route::get('/events', [ModulAcaraController::class, 'index']);
 });
