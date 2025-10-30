@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventParticipantController;
+use App\Http\Controllers\EventStatisticController;
 
 
 // Public routes - Landing Page Events
@@ -26,7 +27,11 @@ Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
 Route::get('/dashboard-admin/stats', [DashboardAdminController::class, 'stats']);
+Route::get('/events/{id}/participants', [EventParticipantController::class, 'index']);
+Route::get('/events/{eventId}/stats', [EventStatisticController::class, 'show']);
+
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
