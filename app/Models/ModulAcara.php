@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ModulAcara extends Model
 {
@@ -82,5 +83,32 @@ class ModulAcara extends Model
     public function scopePublik($query)
     {
         return $query->where('mdl_kategori', 'public');
+    }
+
+
+    public function pesertaTerdaftar(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'pendaftaran_acara', 'modul_acara_id', 'user_id')
+            ->withPivot(['metode_daftar', 'waktu_daftar'])
+            ->withTimestamps();
+    }
+    /** Peserta yang diundang (invite-only) */
+    public function pesertaDiundang(): BelongsToMany
+    {
+        return $this->pesertaTerdaftar()->wherePivot('metode_daftar', 'invite');
+    }
+
+    /** Peserta yang daftar sendiri (public) */
+    public function pesertaDaftarSendiri(): BelongsToMany
+    {
+        return $this->pesertaTerdaftar()->wherePivot('metode_daftar', 'self');
+    }
+
+
+    public function pesertaHadir(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'presensi_acara', 'modul_acara_id', 'user_id')
+            ->withPivot(['waktu_absen', 'latitude', 'longitude'])
+            ->withTimestamps();
     }
 }
