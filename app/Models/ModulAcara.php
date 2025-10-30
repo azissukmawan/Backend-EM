@@ -24,7 +24,7 @@ class ModulAcara extends Model
         'mdl_slug',
         'mdl_nama',
         'mdl_deskripsi',
-        'mdl_kategori_acara',
+        'mdl_kategori',
         'mdl_tipe',
         'mdl_lokasi',
         'mdl_latitude',
@@ -110,5 +110,10 @@ class ModulAcara extends Model
         return $this->belongsToMany(User::class, 'presensi_acara', 'modul_acara_id', 'user_id')
             ->withPivot(['waktu_absen', 'latitude', 'longitude'])
             ->withTimestamps();
+    }
+
+    public function pendaftarans()
+    {
+        return $this->hasMany(PendaftaranAcara::class, 'modul_acara_id');
     }
 }

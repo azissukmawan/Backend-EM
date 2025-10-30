@@ -8,6 +8,8 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EventParticipantController;
+
 
 // Public routes - Landing Page Events
 Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
@@ -15,6 +17,7 @@ Route::get('/events/all', [EventController::class, 'all']); // SEMUA event (akti
 Route::get('/events/upcoming', [EventController::class, 'upcoming']); // Event AKAN DATANG
 Route::get('/events/past', [EventController::class, 'past']); // Event SUDAH SELESAI
 Route::get('/events/{identifier}', [EventController::class, 'show']); // Detail event by ID or slug
+Route::get('/events/{id}/participants', [EventParticipantController::class, 'index']);
 
 // Auth routes
 Route::post('/register', [AuthController::class, 'register']);

@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             DetailPesertaSeeder::class,
             DetailAdminSeeder::class,
             ModulAcaraSeeder::class,
+            PendaftaranAcaraSeeder::class,
+            PresensiAcaraSeeder::class,
         ]);
     }
 }

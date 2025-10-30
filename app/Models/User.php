@@ -84,4 +84,8 @@ class User extends Authenticatable
             ->withPivot(['waktu_absen', 'latitude', 'longitude'])
             ->withTimestamps();
     }
+    public function pendaftarans()
+    {
+        return $this->hasMany(PendaftaranAcara::class, 'user_id');
+    }
 }
