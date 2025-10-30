@@ -4,15 +4,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ModulAcaraController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\DashboardAdminController;
+use App\Http\Controllers\DashboardController;
 
-// Public routes
+// Public routes - Landing Page Events
+Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
+Route::get('/events/all', [EventController::class, 'all']); // SEMUA event (aktif, upcoming, past)
+Route::get('/events/upcoming', [EventController::class, 'upcoming']); // Event AKAN DATANG
+Route::get('/events/past', [EventController::class, 'past']); // Event SUDAH SELESAI
+Route::get('/events/{identifier}', [EventController::class, 'show']); // Detail event by ID or slug
+
+// Auth routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::get('/dashboard-admin/stats', [DashboardAdminController::class, 'stats']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -21,8 +32,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-    
-    Route::get('/events', [ModulAcaraController::class, 'index']);
-    Route::get('/dashboard-admin/stats', [DashboardAdminController::class, 'stats']);
 
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'getProfile']);
+        Route::post('/update', [ProfileController::class, 'updateProfile']);
+        Route::post('/change-password', [ProfileController::class, 'changePassword']);
+
+        Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/dashboard/events/{identifier}', [DashboardController::class, 'show']);
+    });
+    
+    // Admin routes for managing events
+    Route::get('/admin/events', [ModulAcaraController::class, 'index']);
+
+    Route::get('/events', [ModulAcaraController::class, 'index']);
 });

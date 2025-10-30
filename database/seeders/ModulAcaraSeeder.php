@@ -29,7 +29,7 @@ class ModulAcaraSeeder extends Seeder
             'mdl_slug' => Str::slug('Acara Developer Benchmark ' . now()->timestamp),
             'mdl_nama' => 'Acara Developer Benchmark',
             'mdl_status' => 'active',
-            'is_public' => true,
+            'mdl_kategori' => 'public',
             'mdl_tipe' => 'hybrid',
             'created_by' => $user->id,
             'updated_by' => $user->id,
