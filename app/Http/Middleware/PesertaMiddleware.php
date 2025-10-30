@@ -9,22 +9,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PesertaMiddleware
 {
-    /**
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Belum login → ke login
         if (!Auth::check()) {
-            return redirect()->route('login');
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
-
-        // Sudah login tapi bukan peserta → arahkan ke dashboard yang tepat
         if (!Auth::user() || Auth::user()->role !== 'peserta') {
-            return redirect()->route('admin.dashboard'); // ganti sesuai rute kamu
+            return response()->json(['message' => 'Forbidden'], 403);
         }
-
         return $next($request);
     }
 }
