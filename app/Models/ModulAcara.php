@@ -23,7 +23,7 @@ class ModulAcara extends Model
         'mdl_slug',
         'mdl_nama',
         'mdl_deskripsi',
-        'is_public',
+        'mdl_kategori_acara',
         'mdl_tipe',
         'mdl_lokasi',
         'mdl_latitude',
@@ -31,8 +31,7 @@ class ModulAcara extends Model
         'mdl_radius',
         'mdl_pendaftaran_mulai',
         'mdl_pendaftaran_selesai',
-        'mdl_maks_peserta_offline',
-        'mdl_maks_peserta_online',
+        'mdl_maks_peserta_eksternal',
         'mdl_acara_mulai',
         'mdl_acara_selesai',
         'mdl_status',
@@ -82,6 +81,6 @@ class ModulAcara extends Model
     // Scope untuk publik
     public function scopePublik($query)
     {
-        return $query->where('is_public', true);
+        return $query->where('mdl_kategori', 'public');
     }
 }

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ModulAcaraController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\DashboardAdminController;
 
 // Public routes - Landing Page Events
 Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
@@ -35,6 +36,9 @@ Route::middleware('throttle:reset')->group(function () {
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
+// Public routes - Dashboard Stats
+Route::get('/dashboard-admin/stats', [DashboardAdminController::class, 'stats']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -45,4 +49,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
+    
+    Route::get('/events', [ModulAcaraController::class, 'index']);
 });
