@@ -33,8 +33,6 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
-    Route::get('/events', [ModulAcaraController::class, 'index']);
-
     Route::prefix('profile')->group(function () {
         Route::get('/', [ProfileController::class, 'getProfile']);
         Route::post('/update', [ProfileController::class, 'updateProfile']);
@@ -43,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/dashboard/events/{identifier}', [DashboardController::class, 'show']);
     });
+    
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
 
