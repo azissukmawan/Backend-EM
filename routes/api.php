@@ -7,8 +7,6 @@ use App\Http\Controllers\ModulAcaraController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\EventController;
-use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\DashboardController;
 
 // Public routes - Landing Page Events
