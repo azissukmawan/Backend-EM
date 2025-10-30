@@ -35,8 +35,8 @@ return new class extends Migration
             // Pendaftaran
             $table->dateTime('mdl_pendaftaran_mulai');
             $table->dateTime('mdl_pendaftaran_selesai');
-            $table->unsignedInteger('mdl_maks_peserta_offline')->nullable();
-            $table->unsignedInteger('mdl_maks_peserta_online')->nullable();
+            $table->unsignedInteger('mdl_maks_peserta_eksternal')->nullable();
+
 
             // Jadwal utama event
             $table->dateTime('mdl_acara_mulai');
