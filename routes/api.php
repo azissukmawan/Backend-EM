@@ -14,6 +14,7 @@ use App\Http\Controllers\EventStatisticController;
 use App\Http\Controllers\DoorprizeController;
 use App\Http\Controllers\PendaftaranAcaraController;
 
+
 // Public routes - Landing Page Events
 Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
 Route::get('/events/all', [EventController::class, 'all']); // SEMUA event (aktif, upcoming, past)
