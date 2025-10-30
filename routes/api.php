@@ -4,8 +4,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ModulAcaraController;
+use App\Http\Controllers\EventController;
 
-// Public routes
+// Public routes - Landing Page Events
+Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
+Route::get('/events/all', [EventController::class, 'all']); // SEMUA event (aktif, upcoming, past)
+Route::get('/events/upcoming', [EventController::class, 'upcoming']); // Event AKAN DATANG
+Route::get('/events/past', [EventController::class, 'past']); // Event SUDAH SELESAI
+Route::get('/events/{identifier}', [EventController::class, 'show']); // Detail event by ID or slug
+
+// Auth routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
@@ -20,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-    
-    Route::get('/events', [ModulAcaraController::class, 'index']);
 
+    // Admin routes for managing events
+    Route::get('/admin/events', [ModulAcaraController::class, 'index']);
 });
