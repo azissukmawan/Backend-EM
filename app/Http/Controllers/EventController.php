@@ -11,19 +11,19 @@ class EventController extends Controller
     /**
      * GET /api/events
      * Landing Page - Semua event yang AKTIF (sedang berlangsung)
-     * Filter: is_public = true, status = active, acara sedang berlangsung (tanggal acara <= hari ini)
+     * Filter: mdl_kategori = 'public', status = active, acara sedang berlangsung (tanggal acara <= hari ini)
      */
     public function index()
     {
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('is_public', true)
+            $events = ModulAcara::where('mdl_kategori', 'public')
                 ->where('mdl_status', 'active')
                 ->where('mdl_acara_mulai', '<=', $now)
-                ->where(function ($query) use ($now) {
+                ->where(function($query) use ($now) {
                     $query->whereNull('mdl_acara_selesai')
-                        ->orWhere('mdl_acara_selesai', '>=', $now);
+                          ->orWhere('mdl_acara_selesai', '>=', $now);
                 })
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
@@ -55,11 +55,12 @@ class EventController extends Controller
                     'description' => 'Event yang sedang aktif/berlangsung saat ini'
                 ]
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve events',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
@@ -67,14 +68,14 @@ class EventController extends Controller
     /**
      * GET /api/events/upcoming
      * Event yang AKAN DATANG (belum dimulai)
-     * Filter: is_public = true, status = active, acara_mulai > sekarang
+     * Filter: mdl_kategori = 'public', status = active, acara_mulai > sekarang
      */
     public function upcoming()
     {
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('is_public', true)
+            $events = ModulAcara::where('mdl_kategori', 'public')
                 ->where('mdl_status', 'active')
                 ->where('mdl_acara_mulai', '>', $now)
                 ->orderBy('mdl_acara_mulai', 'asc')
@@ -109,11 +110,12 @@ class EventController extends Controller
                     'description' => 'Event yang akan datang (belum dimulai)'
                 ]
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve upcoming events',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
@@ -121,22 +123,22 @@ class EventController extends Controller
     /**
      * GET /api/events/past
      * Event yang SUDAH SELESAI (masa lalu)
-     * Filter: is_public = true, acara_selesai < sekarang OR (acara_mulai < sekarang AND acara_selesai is null and past 1 day)
+     * Filter: mdl_kategori = 'public', acara_selesai < sekarang OR (acara_mulai < sekarang AND acara_selesai is null and past 1 day)
      */
     public function past()
     {
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('is_public', true)
-                ->where(function ($query) use ($now) {
+            $events = ModulAcara::where('mdl_kategori', 'public')
+                ->where(function($query) use ($now) {
                     // Event yang punya tanggal selesai dan sudah lewat
                     $query->where('mdl_acara_selesai', '<', $now)
-                        // ATAU event yang mulai > 1 hari lalu tapi tidak ada tanggal selesai
-                        ->orWhere(function ($q) use ($now) {
-                            $q->whereNull('mdl_acara_selesai')
+                          // ATAU event yang mulai > 1 hari lalu tapi tidak ada tanggal selesai
+                          ->orWhere(function($q) use ($now) {
+                              $q->whereNull('mdl_acara_selesai')
                                 ->where('mdl_acara_mulai', '<', $now->copy()->subDay());
-                        });
+                          });
                 })
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
@@ -172,11 +174,12 @@ class EventController extends Controller
                     'description' => 'Event yang sudah selesai'
                 ]
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve past events',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
@@ -184,12 +187,12 @@ class EventController extends Controller
     /**
      * GET /api/events/all
      * SEMUA event public (tanpa filter status & tanggal)
-     * Filter: is_public = true saja
+     * Filter: mdl_kategori = 'public' saja
      */
     public function all()
     {
         try {
-            $events = ModulAcara::where('is_public', true)
+            $events = ModulAcara::where('mdl_kategori', 'public')
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
                 ->map(function ($event) {
@@ -234,11 +237,12 @@ class EventController extends Controller
                     'description' => 'Semua event public (tanpa filter status)'
                 ]
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve all events',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
@@ -251,9 +255,11 @@ class EventController extends Controller
     {
         try {
             // Cari berdasarkan ID atau slug
-            $event = ModulAcara::where('id', $identifier)
-                ->orWhere('mdl_slug', $identifier)
-                ->where('is_public', true)
+            $event = ModulAcara::where('mdl_kategori', 'public')
+                ->where(function($query) use ($identifier) {
+                    $query->where('id', $identifier)
+                          ->orWhere('mdl_slug', $identifier);
+                })
                 ->first();
 
             if (!$event) {
@@ -326,11 +332,12 @@ class EventController extends Controller
                     'event' => $eventDetail
                 ]
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve event detail',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }

@@ -23,7 +23,7 @@ class ModulAcara extends Model
         'mdl_slug',
         'mdl_nama',
         'mdl_deskripsi',
-        'mdl_kategori_acara',
+        'mdl_kategori',
         'mdl_tipe',
         'mdl_lokasi',
         'mdl_latitude',

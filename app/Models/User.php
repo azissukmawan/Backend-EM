@@ -94,6 +94,7 @@ class User extends Authenticatable
     public function incrementFailedLoginAttempts()
     {
         $this->increment('failed_login_attempts');
+        $this->refresh(); // Reload data dari database untuk mendapatkan nilai terbaru
 
         // Lock account for 15 minutes after 5 failed attempts
         if ($this->failed_login_attempts >= 5) {
