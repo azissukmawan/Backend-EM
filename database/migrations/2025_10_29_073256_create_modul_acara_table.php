@@ -21,10 +21,10 @@ return new class extends Migration
             $table->string('mdl_slug', 180)->unique();                // untuk URL publik
             $table->string('mdl_nama', 150);
             $table->text('mdl_deskripsi');
-            $table->boolean('is_public')->default(true);  // tampil di publik?
 
             // Tipe pelaksanaan
             $table->enum('mdl_tipe', ['online', 'offline', 'hybrid']);
+            $table->enum('mdl_kategori', ['public', 'private', 'invite-only']);
 
             // Lokasi & absensi
             $table->string('mdl_lokasi', 255)->nullable();

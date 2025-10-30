@@ -26,9 +26,9 @@ class ModulAcaraFactory extends Factory
         $startEvent = (clone $endReg)->modify('+' . $this->faker->numberBetween(1, 5) . ' days');
         $endEvent = (clone $startEvent)->modify('+' . $this->faker->numberBetween(2, 8) . ' hours');
 
+        $kategori = $this->faker->randomElement(['public', 'private', 'invite-only']);
         $tipe = $this->faker->randomElement(['online', 'offline', 'hybrid']);
         $isOffline = in_array($tipe, ['offline', 'hybrid']);
-        $isPublic = $this->faker->boolean(80);
 
         $user = User::inRandomOrder()->first() ?? User::factory()->create();
 
@@ -38,7 +38,7 @@ class ModulAcaraFactory extends Factory
             'mdl_slug' => $slug,
             'mdl_nama' => $name,
             'mdl_deskripsi' => $this->faker->paragraphs(3, true),
-            'is_public' => $isPublic,
+            'mdl_kategori' => $kategori,
             'mdl_tipe' => $tipe,
             'mdl_lokasi' => $isOffline ? $this->faker->address() : null,
             'mdl_latitude' => $isOffline ? $this->faker->latitude(-11.0, 6.0) : null,
@@ -46,7 +46,7 @@ class ModulAcaraFactory extends Factory
             'mdl_radius' => $isOffline ? $this->faker->numberBetween(50, 500) : null,
             'mdl_pendaftaran_mulai' => $startReg,
             'mdl_pendaftaran_selesai' => $endReg,
-            'mdl_maks_peserta_eksternal' => $isPublic == true ? $this->faker->numberBetween(50, 500) : null,
+            'mdl_maks_peserta_eksternal' => $kategori == 'public' ? $this->faker->numberBetween(50, 500) : null,
             'mdl_acara_mulai' => $startEvent,
             'mdl_acara_selesai' => $this->faker->boolean(90) ? $endEvent : null,
             'mdl_status' => $this->faker->randomElement(['draft', 'active', 'closed']),
