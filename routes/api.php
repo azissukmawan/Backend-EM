@@ -49,6 +49,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
-    
-    Route::get('/events', [ModulAcaraController::class, 'index']);
 });
