@@ -175,7 +175,7 @@ class DashboardController extends Controller
                 : null,
             'pendaftaran_selesai' => Carbon::parse($event->mdl_pendaftaran_selesai)->format('d F Y, H:i') . ' WIB',
             'banner' => $event->mdl_banner_acara
-                ? asset('storage/' . $event->mdl_banner_acara)
+                ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
                 : null,
             'event_time_status' => $eventTimeStatus,
             'registration_status' => $registrationStatus,
@@ -264,16 +264,16 @@ class DashboardController extends Controller
             // Files/Media
             'media' => [
                 'banner' => $event->mdl_banner_acara
-                    ? asset('storage/' . $event->mdl_banner_acara)
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
                     : null,
                 'file_acara' => $event->mdl_file_acara
-                    ? asset('storage/' . $event->mdl_file_acara)
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_acara
                     : null,
                 'file_rundown' => $event->mdl_file_rundown
-                    ? asset('storage/' . $event->mdl_file_rundown)
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_rundown
                     : null,
                 'template_sertifikat' => $event->mdl_template_sertifikat
-                    ? asset('storage/' . $event->mdl_template_sertifikat)
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_template_sertifikat
                     : null,
             ],
 

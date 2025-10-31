@@ -11,6 +11,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\EventStatisticController;
 
+use App\Http\Controllers\DoorprizeController;
+use App\Http\Controllers\PendaftaranAcaraController;
 
 // Public routes - Landing Page Events
 Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
@@ -28,6 +30,29 @@ Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
+// Auth routes - Register (rate limited)
+Route::middleware('throttle:api')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+});
+
+// Auth routes - Login (rate limited - 5 attempts per minute)
+Route::middleware('throttle:login')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+});
+
+// Auth routes - OTP (rate limited - 3 attempts per minute)
+Route::middleware('throttle:otp')->group(function () {
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
+});
+
+// Auth routes - Password Reset (rate limited - 3 attempts per 5 minutes)
+Route::middleware('throttle:reset')->group(function () {
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+});
+
+// Public routes - Dashboard Stats
 Route::get('/dashboard-admin/stats', [DashboardAdminController::class, 'stats']);
 
 
@@ -54,13 +79,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/dashboard/events/{identifier}', [DashboardController::class, 'show']);
     });
-    
+
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
+
+    // Doorprize routes - Superadmin only
+    Route::post('/admin/events/{eventId}/draw-winner', [DoorprizeController::class, 'drawWinner']);
+    Route::get('/admin/events/{eventId}/winners', [DoorprizeController::class, 'getWinners']);
 
     Route::get('/events', [ModulAcaraController::class, 'index']);
 
     // Admin routes for managing participant
     Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
     Route::get('/admin/events/{eventId}/stats', [EventStatisticController::class, 'show']);
+
+    // Pendaftaran Acara
+    Route::post('/events/{eventId}/daftar', [PendaftaranAcaraController::class, 'daftar']);
+    Route::post('/events/{eventId}/daftar-invite', [PendaftaranAcaraController::class, 'daftarInvite']);
+    Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
 });

@@ -22,75 +22,83 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users',
-            'email' => 'required|string|email|max:255|unique:users',
-            'telp' => 'required|string|max:20',
-            'password' => 'required|string|min:8|confirmed',
-            'status_karyawan' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // Buat user baru
-        $user = User::create([
-            'name' => $request->name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'telp' => $request->telp,
-            'password' => Hash::make($request->password),
-            'role' => 'peserta',
-        ]);
-
-        DetailPeserta::create([
-            'user_id' => $user->id,
-            'status_karyawan' => $request->status_karyawan,
-            'foto' => null,
-        ]);
-
-
-        // Generate OTP code
-        $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        // Simpan OTP ke database
-        $otp = Otp::create([
-            'user_id' => $user->id,
-            'code' => $otpCode,
-            'expires_at' => Carbon::now()->addMinutes(10), // OTP berlaku 10 menit
-        ]);
-
-        // Kirim OTP via email
         try {
-            Mail::to($user->email)->send(new OtpMail($otpCode, $user->name));
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'username' => 'required|string|max:255|unique:users',
+                'email' => 'required|string|email|max:255|unique:users',
+                'telp' => 'required|string|max:20',
+                'password' => 'required|string|min:8|confirmed',
+                'status_karyawan' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Buat user baru
+            $user = User::create([
+                'name' => $request->name,
+                'username' => $request->username,
+                'email' => $request->email,
+                'telp' => $request->telp,
+                'password' => Hash::make($request->password),
+                'role' => 'peserta',
+            ]);
+
+            DetailPeserta::create([
+                'user_id' => $user->id,
+                'status_karyawan' => $request->status_karyawan,
+                'foto' => null,
+            ]);
+
+
+            // Generate OTP code
+            $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Simpan OTP ke database
+            $otp = Otp::create([
+                'user_id' => $user->id,
+                'code' => $otpCode,
+                'expires_at' => Carbon::now()->addMinutes(10), // OTP berlaku 10 menit
+            ]);
+
+            // Kirim OTP via email
+            try {
+                Mail::to($user->email)->send(new OtpMail($otpCode, $user->name));
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User created but failed to send OTP email',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User registered successfully. Please check your email for OTP code.',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'username' => $user->username,
+                        'email' => $user->email,
+                        'telp' => $user->telp,
+                        'role' => $user->role,
+                    ]
+                ]
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'User created but failed to send OTP email',
-                'error' => $e->getMessage()
+                'message' => 'Registration failed',
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'User registered successfully. Please check your email for OTP code.',
-            'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'telp' => $user->telp,
-                    'role' => $user->role,
-                ]
-            ]
-        ], 201);
     }
 
     /**
@@ -185,6 +193,21 @@ class AuthController extends Controller
             ], 400);
         }
 
+        // Cek apakah ada OTP yang baru saja dikirim dalam 2 menit terakhir
+        $lastOtp = Otp::where('user_id', $user->id)
+            ->where('created_at', '>', Carbon::now()->subMinutes(2))
+            ->latest()
+            ->first();
+
+        if ($lastOtp) {
+            $waitTime = Carbon::now()->diffInSeconds($lastOtp->created_at->addMinutes(2));
+            return response()->json([
+                'success' => false,
+                'message' => 'Please wait before requesting a new OTP',
+                'wait_seconds' => $waitTime
+            ], 429);
+        }
+
         // Generate OTP code baru
         $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
@@ -202,7 +225,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send OTP email',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
 
@@ -235,19 +258,56 @@ class AuthController extends Controller
 
         $user = User::where($loginField, $request->login)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
+        // Cek apakah akun terkunci
+        if ($user->isLocked()) {
+            $lockRemaining = Carbon::now()->diffInMinutes($user->locked_until);
+            return response()->json([
+                'success' => false,
+                'message' => 'Account is temporarily locked due to too many failed login attempts',
+                'locked_until' => $user->locked_until->toDateTimeString(),
+                'minutes_remaining' => $lockRemaining
+            ], 423);
+        }
+
+        // Verifikasi password
+        if (!Hash::check($request->password, $user->password)) {
+            // Increment failed login attempts
+            $user->incrementFailedLoginAttempts();
+
+            $remainingAttempts = 5 - $user->failed_login_attempts;
+
+            if ($user->isLocked()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Too many failed login attempts. Account locked for 15 minutes.',
+                    'locked_until' => $user->locked_until->toDateTimeString()
+                ], 423);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials',
+                'remaining_attempts' => max(0, $remainingAttempts)
+            ], 401);
+        }
+
+        // Cek email verification
         if (!$user->email_verified_at) {
             return response()->json([
                 'success' => false,
                 'message' => 'Please verify your email first'
             ], 403);
         }
+
+        // Login berhasil - reset failed attempts
+        $user->resetFailedLoginAttempts();
 
         // Buat token menggunakan Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -263,6 +323,7 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'telp' => $user->telp,
                     'role' => $user->role,
+                    'status_karyawan' => $user->detailPeserta->status_karyawan ?? null,
                     'email_verified_at' => $user->email_verified_at,
                 ],
                 'access_token' => $token,
@@ -346,7 +407,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send reset password email',
-                'error' => $e->getMessage()
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
 
