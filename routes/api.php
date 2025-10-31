@@ -18,13 +18,29 @@ Route::get('/events/upcoming', [EventController::class, 'upcoming']); // Event A
 Route::get('/events/past', [EventController::class, 'past']); // Event SUDAH SELESAI
 Route::get('/events/{identifier}', [EventController::class, 'show']); // Detail event by ID or slug
 
-// Auth routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
-Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+// Auth routes - Register (rate limited)
+Route::middleware('throttle:api')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+});
+
+// Auth routes - Login (rate limited - 5 attempts per minute)
+Route::middleware('throttle:login')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+});
+
+// Auth routes - OTP (rate limited - 3 attempts per minute)
+Route::middleware('throttle:otp')->group(function () {
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
+});
+
+// Auth routes - Password Reset (rate limited - 3 attempts per 5 minutes)
+Route::middleware('throttle:reset')->group(function () {
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+});
+
+// Public routes - Dashboard Stats
 Route::get('/dashboard-admin/stats', [DashboardAdminController::class, 'stats']);
 
 // Protected routes
