@@ -9,12 +9,7 @@ class PendaftaranAcara extends Model
 {
     use HasFactory;
 
-    protected $table = 'pendaftaran_acarhttps://github.com/Event-Management-airnav/Backend-EM/pull/49/conflict?name=database%252Fseeders%252FPendaftaranAcaraSeeder.php&base_oid=d380e5fb5c8f2d82ef7c42733ff58da4fba1b38d&head_oid=8648bb4f9eccbe9744e33406d423a597fd0e584ea';
-    protected $guarded = [];
-
-    public function event()
-    //
-    protected $table = 'pendaftaran_acara'
+    protected $table = 'pendaftaran_acara';
     protected $fillable = [
         'modul_acara_id',
         'user_id',

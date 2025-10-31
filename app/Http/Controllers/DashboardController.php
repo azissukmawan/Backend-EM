@@ -284,22 +284,6 @@ class DashboardController extends Controller
                 'doorprize_aktif' => $event->mdl_doorprize_aktif,
             ],
 
-            // Files/Media
-            'media' => [
-                'banner' => $event->mdl_banner_acara
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
-                    : null,
-                'file_acara' => $event->mdl_file_acara
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_acara
-                    : null,
-                'file_rundown' => $event->mdl_file_rundown
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_rundown
-                    : null,
-                'template_sertifikat' => $event->mdl_template_sertifikat
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_template_sertifikat
-                    : null,
-            ],
-
             // Additional Info
             'catatan' => $event->mdl_catatan,
             'event_time_status' => $eventTimeStatus,
@@ -322,6 +306,28 @@ class DashboardController extends Controller
         // Add registration info if user is registered
         if ($isRegistered && $registrationData) {
             $data['user_registration'] = $registrationData;
+        }
+
+        // Add media files only if user is registered
+        if ($isRegistered) {
+            $data['media'] = [
+                'banner' => $event->mdl_banner_acara
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
+                    : null,
+                'file_acara' => $event->mdl_file_acara
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_acara
+                    : null,
+                'file_rundown' => $event->mdl_file_rundown
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_rundown
+                    : null,
+            ];
+        } else {
+            // Only show banner for non-registered users
+            $data['media'] = [
+                'banner' => $event->mdl_banner_acara
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
+                    : null,
+            ];
         }
 
         return $data;
