@@ -14,7 +14,7 @@ class PendaftaranAcara extends Model
 
     public function event()
     //
-    protected $table = 'pendaftaran_acara';
+    protected $table = 'pendaftaran_acara'
     protected $fillable = [
         'modul_acara_id',
         'user_id',
