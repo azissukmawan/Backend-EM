@@ -104,8 +104,23 @@ class User extends Authenticatable
             ]);
         }
     }
-    public function pendaftarans()
+
+    public function acaraTerdaftar(): BelongsToMany
     {
-        return $this->hasMany(PendaftaranAcara::class, 'user_id');
+        return $this->belongsToMany(ModulAcara::class, 'pendaftaran_acara', 'user_id', 'modul_acara_id')
+            ->withPivot(['metode_daftar', 'waktu_daftar'])
+            ->withTimestamps();
+    }
+
+    /** Acara yang user terdaftar via undangan (invite-only) */
+    public function acaraUndangan(): BelongsToMany
+    {
+        return $this->acaraTerdaftar()->wherePivot('metode_daftar', 'invite', '');
+    }
+
+    /** Acara yang user daftar sendiri (public) */
+    public function acaraDaftarSendiri(): BelongsToMany
+    {
+        return $this->acaraTerdaftar()->wherePivot('metode_daftar', 'self');
     }
 }
