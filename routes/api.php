@@ -29,8 +29,6 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::get('/dashboard-admin/stats', [DashboardAdminController::class, 'stats']);
-Route::get('/events/{id}/participants', [EventParticipantController::class, 'index']);
-Route::get('/events/{eventId}/stats', [EventStatisticController::class, 'show']);
 
 
 // Protected routes
@@ -61,4 +59,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
 
     Route::get('/events', [ModulAcaraController::class, 'index']);
+
+    // Admin routes for managing participant
+    Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
+    Route::get('/admin/events/{eventId}/stats', [EventStatisticController::class, 'show']);
 });
