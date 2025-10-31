@@ -55,7 +55,7 @@ class ModulAcaraFactory extends Factory
             'mdl_template_sertifikat' => $this->faker->boolean(30) ? $this->faker->filePath() : null,
             'mdl_sertifikat_aktif' => $this->faker->boolean(60),
             'mdl_doorprize_aktif' => $this->faker->boolean(30),
-            'mdl_banner_acara' => $this->faker->boolean(40) ? $this->faker->imageUrl(1200, 630, 'event', true, 'banner') : null,
+            'mdl_banner_acara' => $this->faker->boolean(40) ? $this->faker->imageUrl(1200, 630, 'modulAcara', true, 'banner') : null,
             'mdl_catatan' => $this->faker->optional()->sentence(12),
             'created_by' => $user->id,
             'updated_by' => $this->faker->boolean(70) ? $user->id : null,
