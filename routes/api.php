@@ -96,8 +96,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/events/{eventId}/draw-winner', [DoorprizeController::class, 'drawWinner']);
     Route::get('/admin/events/{eventId}/winners', [DoorprizeController::class, 'getWinners']);
 
-    Route::get('/events', [ModulAcaraController::class, 'index']);
-
     // Admin routes for managing participant
     Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
     Route::get('/admin/events/{eventId}/stats', [EventStatisticController::class, 'show']);

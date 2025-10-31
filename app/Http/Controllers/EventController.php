@@ -18,7 +18,7 @@ class EventController extends Controller
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('mdl_kategori', ['public', 'private'])
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->where('mdl_status', 'active')
                 ->where('mdl_acara_mulai', '<=', $now)
                 ->where(function ($query) use ($now) {
@@ -74,7 +74,7 @@ class EventController extends Controller
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('mdl_kategori', ['public', 'private'])
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->where('mdl_status', 'active')
                 ->where('mdl_acara_mulai', '>', $now)
                 ->orderBy('mdl_acara_mulai', 'asc')
@@ -128,7 +128,7 @@ class EventController extends Controller
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('mdl_kategori', ['public', 'private'])
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->where(function ($query) use ($now) {
                     // Event yang punya tanggal selesai dan sudah lewat
                     $query->where('mdl_acara_selesai', '<', $now)
@@ -189,7 +189,7 @@ class EventController extends Controller
     public function all()
     {
         try {
-            $events = ModulAcara::where('mdl_kategori', ['public', 'private'])
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
                 ->map(function ($event) {
@@ -251,7 +251,7 @@ class EventController extends Controller
     {
         try {
             // Cari berdasarkan ID atau slug
-            $event = ModulAcara::where('mdl_kategori', ['public', 'private'])
+            $event = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->where(function ($query) use ($identifier) {
                     $query->where('id', $identifier)
                         ->orWhere('mdl_slug', $identifier);
