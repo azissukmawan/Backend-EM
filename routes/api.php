@@ -8,6 +8,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DoorprizeController;
 
 // Public routes - Landing Page Events
 Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
@@ -51,6 +52,9 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
+
+    // Doorprize routes
+    Route::post('/admin/events/{eventId}/draw-winner', [DoorprizeController::class, 'drawWinner']);
 
     Route::get('/events', [ModulAcaraController::class, 'index']);
 });
