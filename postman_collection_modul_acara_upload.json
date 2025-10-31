@@ -1,0 +1,407 @@
+{
+  "info": {
+    "name": "Modul Acara - File Upload API",
+    "description": "Collection untuk testing endpoint Modul Acara dengan file upload",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Modul Acara (dengan File Upload)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "mdl_nama",
+              "value": "Workshop Laravel 2025",
+              "type": "text"
+            },
+            {
+              "key": "mdl_kode",
+              "value": "EVT001",
+              "type": "text"
+            },
+            {
+              "key": "mdl_slug",
+              "value": "workshop-laravel-2025",
+              "type": "text"
+            },
+            {
+              "key": "mdl_deskripsi",
+              "value": "Workshop tentang Laravel framework terbaru",
+              "type": "text"
+            },
+            {
+              "key": "mdl_tipe",
+              "value": "hybrid",
+              "type": "text",
+              "description": "online, offline, atau hybrid"
+            },
+            {
+              "key": "mdl_kategori",
+              "value": "public",
+              "type": "text",
+              "description": "public, private, atau invite-only"
+            },
+            {
+              "key": "mdl_lokasi",
+              "value": "Jakarta Convention Center",
+              "type": "text"
+            },
+            {
+              "key": "mdl_pendaftaran_mulai",
+              "value": "2025-11-01",
+              "type": "text"
+            },
+            {
+              "key": "mdl_pendaftaran_selesai",
+              "value": "2025-11-15",
+              "type": "text"
+            },
+            {
+              "key": "mdl_acara_mulai",
+              "value": "2025-12-01",
+              "type": "text"
+            },
+            {
+              "key": "mdl_acara_selesai",
+              "value": "2025-12-03",
+              "type": "text"
+            },
+            {
+              "key": "mdl_maks_peserta_eksternal",
+              "value": "100",
+              "type": "text"
+            },
+            {
+              "key": "mdl_status",
+              "value": "draft",
+              "type": "text",
+              "description": "draft, active, closed, atau archived"
+            },
+            {
+              "key": "mdl_file_acara",
+              "type": "file",
+              "description": "Upload modul acara (PDF/PPT/DOC, max 10MB)",
+              "src": []
+            },
+            {
+              "key": "mdl_file_rundown",
+              "type": "file",
+              "description": "Upload rundown acara (PDF/Excel/DOC, max 10MB)",
+              "src": []
+            },
+            {
+              "key": "mdl_template_sertifikat",
+              "type": "file",
+              "description": "Upload template sertifikat (JPG/PNG, max 5MB)",
+              "src": []
+            },
+            {
+              "key": "mdl_banner_acara",
+              "type": "file",
+              "description": "Upload banner acara (JPG/PNG, max 5MB, 1091x791px)",
+              "src": []
+            },
+            {
+              "key": "mdl_catatan",
+              "value": "Harap membawa laptop dan charger. Dress code: Smart Casual",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/modul-acara",
+          "host": ["{{base_url}}"],
+          "path": ["api", "modul-acara"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Modul Acara (tanpa File)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "mdl_nama",
+              "value": "Seminar Teknologi 2025",
+              "type": "text"
+            },
+            {
+              "key": "mdl_kode",
+              "value": "SEM002",
+              "type": "text"
+            },
+            {
+              "key": "mdl_slug",
+              "value": "seminar-teknologi-2025",
+              "type": "text"
+            },
+            {
+              "key": "mdl_deskripsi",
+              "value": "Seminar tentang perkembangan teknologi terkini",
+              "type": "text"
+            },
+            {
+              "key": "mdl_tipe",
+              "value": "online",
+              "type": "text"
+            },
+            {
+              "key": "mdl_kategori",
+              "value": "public",
+              "type": "text"
+            },
+            {
+              "key": "mdl_pendaftaran_mulai",
+              "value": "2025-11-05",
+              "type": "text"
+            },
+            {
+              "key": "mdl_pendaftaran_selesai",
+              "value": "2025-11-20",
+              "type": "text"
+            },
+            {
+              "key": "mdl_acara_mulai",
+              "value": "2025-12-05",
+              "type": "text"
+            },
+            {
+              "key": "mdl_catatan",
+              "value": "Link Zoom akan dikirim H-1",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/modul-acara",
+          "host": ["{{base_url}}"],
+          "path": ["api", "modul-acara"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Modul Acara (dengan File Upload)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "_method",
+              "value": "PUT",
+              "type": "text",
+              "description": "Method override untuk PUT request"
+            },
+            {
+              "key": "mdl_nama",
+              "value": "Workshop Laravel 2025 - Updated",
+              "type": "text"
+            },
+            {
+              "key": "mdl_banner_acara",
+              "type": "file",
+              "description": "Upload banner baru (akan menggantikan yang lama)",
+              "src": []
+            },
+            {
+              "key": "mdl_catatan",
+              "value": "Harap membawa laptop, charger, dan notebook",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/modul-acara/:id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "modul-acara", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Modul Acara (hanya text field)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "_method",
+              "value": "PUT",
+              "type": "text"
+            },
+            {
+              "key": "mdl_catatan",
+              "value": "Info tambahan: Parkir tersedia, snack disediakan",
+              "type": "text"
+            },
+            {
+              "key": "mdl_status",
+              "value": "active",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/modul-acara/:id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "modul-acara", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Modul Acara",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/modul-acara",
+          "host": ["{{base_url}}"],
+          "path": ["api", "modul-acara"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Modul Acara by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/modul-acara/:id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "modul-acara", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Modul Acara (dengan auto delete files)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/modul-acara/:id",
+          "host": ["{{base_url}}"],
+          "path": ["api", "modul-acara", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_BEARER_TOKEN_HERE",
+      "type": "string"
+    }
+  ]
+}
