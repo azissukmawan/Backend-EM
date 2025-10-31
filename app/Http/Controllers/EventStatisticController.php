@@ -52,7 +52,7 @@ class EventStatisticController extends Controller
                 'jumlah_kehadiran' => $jumlahHadir,
                 'online' => $onlineCount,
                 'offline' => $offlineCount,
-                'status_doorprize' => $doorprizeCount,
+                'jumlah_doorprize' => $doorprizeCount,
             ],
         ]);
     }
