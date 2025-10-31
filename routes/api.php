@@ -65,10 +65,18 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
+    Route::get('/admin/events/{id}', [ModulAcaraController::class, 'show']);
     // CRUD superadmin
     Route::post('/admin/events', [ModulAcaraController::class, 'store']);
     Route::put('/admin/events/{id}', [ModulAcaraController::class, 'update']);
     Route::delete('/admin/events/{id}', [ModulAcaraController::class, 'destroy']);
+
+    // Alternative routes (modul-acara)
+    Route::get('/modul-acara', [ModulAcaraController::class, 'index']);
+    Route::get('/modul-acara/{id}', [ModulAcaraController::class, 'show']);
+    Route::post('/modul-acara', [ModulAcaraController::class, 'store']);
+    Route::put('/modul-acara/{id}', [ModulAcaraController::class, 'update']);
+    Route::delete('/modul-acara/{id}', [ModulAcaraController::class, 'destroy']);
     // Peserta routes atau GET biasa
 
     Route::prefix('profile')->group(function () {
