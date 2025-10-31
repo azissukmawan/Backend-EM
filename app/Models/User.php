@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -64,5 +65,23 @@ class User extends Authenticatable
     public function otps()
     {
         return $this->hasMany(Otp::class);
+    }
+
+    // public function acaraTerdaftar(){
+    //     return $this->belongsToMany(ModulAcara::class, '');
+    // }
+
+    public function acaraTerdaftar(): BelongsToMany
+    {
+        return $this->belongsToMany(ModulAcara::class, 'pendaftaran_acara', 'user_id', 'modul_acara_id')
+            ->withPivot(['metode_daftar', 'waktu_daftar'])
+            ->withTimestamps();
+    }
+
+    public function acaraHadir(): BelongsToMany
+    {
+        return $this->belongsToMany(ModulAcara::class, 'presensi_acara', 'user_id', 'modul_acara_id')
+            ->withPivot(['waktu_absen', 'latitude', 'longitude'])
+            ->withTimestamps();
     }
 }

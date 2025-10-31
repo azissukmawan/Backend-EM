@@ -47,6 +47,9 @@ return new class extends Migration
             // Status publik & status internal legal/approval
             $table->enum('mdl_status', ['draft', 'active', 'closed', 'archived'])->default('draft');
 
+            $table->boolean('mdl_presensi_aktif')->default(false); // kalau false, scan QR ditolak
+            $table->string('mdl_kode_qr')->nullable(); // kode QR aktif yang di-generate
+
             // Dokumen/file pendukung
             $table->string('mdl_file_acara')->nullable();                 // modul materi
             $table->string('mdl_file_rundown')->nullable();                // susunan / rundown
