@@ -5,6 +5,55 @@
 http://localhost:8000/api
 ```
 
+## 🔒 Security Features
+
+### Rate Limiting
+Semua endpoint auth dilindungi dengan rate limiting untuk mencegah abuse:
+
+| Endpoint | Rate Limit | Key | Purpose |
+|----------|-----------|-----|---------|
+| `/register` | 60 req/min | IP | Prevent spam |
+| `/login` | **15 req/min** | Email + IP | Allow 5x failed attempts before account lock |
+| `/verify-otp` | 5 req/min | Email + IP | Per-user quota |
+| `/resend-otp` | 5 req/min | Email + IP | With 2-min cooldown |
+| `/forgot-password` | 5 req/5min | IP | Extra protection |
+| `/reset-password` | 5 req/5min | IP | Password reset limit |
+
+**Note:** Login rate limit (15/min) sengaja lebih tinggi dari failed login limit (5x) agar account locking (HTTP 423) bisa berfungsi sebelum rate limiting (HTTP 429) triggered.
+
+### Account Locking
+- **Trigger:** 5x failed login attempts
+- **Duration:** 15 menit
+- **HTTP Status:** 423 Locked
+- **Counter:** Show remaining attempts pada setiap failed login
+- **Reset:** Otomatis setelah login berhasil atau 15 menit
+
+### OTP Cooldown
+- **Cooldown:** 2 menit antara resend OTP
+- **HTTP Status:** 429 Too Many Requests
+- **Expiration:** OTP berlaku 10 menit
+- **Purpose:** Mencegah spam email OTP
+
+### Production Mode
+- Error details disembunyikan saat `APP_DEBUG=false`
+- Hanya menampilkan pesan error umum tanpa technical details
+- Berlaku untuk semua email sending errors dan database errors
+
+### HTTP Status Codes
+| Code | Meaning | Usage |
+|------|---------|-------|
+| 200 | OK | Success |
+| 201 | Created | Registration success |
+| 401 | Unauthorized | Invalid credentials |
+| 403 | Forbidden | Email not verified |
+| 404 | Not Found | User/resource not found |
+| 422 | Unprocessable | Validation error |
+| **423** | **Locked** | **Account locked (5x failed login)** |
+| **429** | **Too Many Requests** | **Rate limit OR OTP cooldown** |
+| 500 | Server Error | Internal error |
+
+---
+
 ## Endpoints
 
 ### 1. Register
@@ -217,7 +266,10 @@ Login user dan mendapatkan access token.
 ```json
 {
     "success": false,
-    "message": "Invalid credentials"
+    "message": "Invalid credentials",
+    "data": {
+        "remaining_attempts": 3
+    }
 }
 ```
 
@@ -226,6 +278,25 @@ Login user dan mendapatkan access token.
 {
     "success": false,
     "message": "Please verify your email first"
+}
+```
+
+**Response Error - Account Locked (423):**
+```json
+{
+    "success": false,
+    "message": "Account is locked. Please try again in 15 minutes.",
+    "data": {
+        "locked_until": "2025-10-30T15:30:00.000000Z",
+        "minutes_remaining": 14
+    }
+}
+```
+
+**Response Error - Too Many Requests (429):**
+```json
+{
+    "message": "Too Many Attempts."
 }
 ```
 

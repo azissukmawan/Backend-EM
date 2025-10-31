@@ -3,11 +3,33 @@
 ## 🚀 Fitur yang Telah Dibuat
 
 ✅ **Register** - Registrasi user baru dengan OTP email verification  
-✅ **Login** - Login dengan Laravel Sanctum token  
+✅ **Login** - Login dengan Laravel Sanctum token (email/username)  
 ✅ **Verify OTP** - Verifikasi email dengan kode OTP 6 digit  
 ✅ **Resend OTP** - Kirim ulang OTP jika expired atau hilang  
 ✅ **Logout** - Logout dan hapus token  
 ✅ **Get User** - Mendapatkan data user yang sedang login  
+✅ **Forgot Password** - Kirim link reset password via email  
+✅ **Reset Password** - Reset password dengan token  
+
+## 🔐 Security Features
+
+✅ **Rate Limiting** - Mencegah brute force & spam attacks  
+✅ **Account Locking** - Kunci akun setelah 5x failed login (15 menit)  
+✅ **OTP Cooldown** - Cooldown 2 menit untuk resend OTP  
+✅ **Password Hashing** - Bcrypt untuk semua password  
+✅ **Token Expiration** - OTP (10 min), Password Reset (60 min)  
+✅ **Email Verification** - Wajib verify email sebelum login  
+
+### Rate Limiting Details:
+- **Login**: 5 attempts per minute (per IP)
+- **OTP Verify/Resend**: 3 attempts per minute (per IP)
+- **Password Reset**: 3 attempts per 5 minutes (per IP)
+- **General API**: 60 requests per minute (per user/IP)
+
+### Account Locking:
+- Akun terkunci setelah 5x failed login attempts
+- Lock duration: 15 menit
+- Auto-reset counter setelah login berhasil
 
 ## 📋 Struktur Database
 
@@ -20,6 +42,8 @@
 - role (superadmin/peserta)
 - password
 - email_verified_at
+- **failed_login_attempts** (new)
+- **locked_until** (new)
 - created_at, updated_at
 
 ### Tabel `otps`
@@ -29,6 +53,11 @@
 - expires_at (berlaku 10 menit)
 - verified_at
 - created_at, updated_at
+
+### Tabel `password_resets`
+- email (indexed)
+- token (hashed)
+- created_at
 
 ## 🔧 Setup
 
