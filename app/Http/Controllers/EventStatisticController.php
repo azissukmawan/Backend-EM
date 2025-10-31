@@ -12,47 +12,54 @@ class EventStatisticController extends Controller
     /**
      * Statistik peserta per event
      */
-    public function show($eventId)
+    public function show(Request $request, $eventId)
     {
+        if (!$request->user() || $request->user()->role !== 'superadmin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $jumlahPendaftar = PendaftaranAcara::where('modul_acara_id', $eventId)->count();
 
         $jumlahHadir = PresensiAcara::where('modul_acara_id', $eventId)
             ->where('status', 'Hadir')
             ->count();
 
-        // Ambil tipe event (online/offline/hybrid)
-        $event = ModulAcara::findOrFail($eventId);
-
-        $onlineCount = 0;
-        $offlineCount = 0;
-
-        if ($event->mdl_tipe === 'hybrid') {
-            $onlineCount = PendaftaranAcara::where('modul_acara_id', $eventId)
-                ->whereHas('event', fn($q) => $q->where('mdl_tipe', 'online'))
-                ->count();
-
-            $offlineCount = PendaftaranAcara::where('modul_acara_id', $eventId)
-                ->whereHas('event', fn($q) => $q->where('mdl_tipe', 'offline'))
-                ->count();
-        } elseif ($event->mdl_tipe === 'online') {
-            $onlineCount = $jumlahPendaftar;
-        } elseif ($event->mdl_tipe === 'offline') {
-            $offlineCount = $jumlahPendaftar;
-        }
-
-        // Jumlah peserta yang mendapat doorprize
         $doorprizeCount = PendaftaranAcara::where('modul_acara_id', $eventId)
             ->where('has_doorprize', true)
             ->count();
 
+        // Ambil tipe event
+        $event = ModulAcara::findOrFail($eventId);
+
+        // Default nilai 0
+        $onlineCount = 0;
+        $offlineCount = 0;
+
+        // Logika sesuai tipe event
+        switch ($event->mdl_tipe) {
+            case 'online':
+                $onlineCount = $jumlahPendaftar;
+                break;
+
+            case 'offline':
+                $offlineCount = $jumlahPendaftar;
+                break;
+
+            case 'hybrid':
+                // Hybrid -> keduanya diisi jumlah peserta
+                $onlineCount = $jumlahPendaftar;
+                $offlineCount = $jumlahPendaftar;
+                break;
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
-                'jumlah_pendaftar' => $jumlahPendaftar,
-                'jumlah_kehadiran' => $jumlahHadir,
-                'online' => $onlineCount,
-                'offline' => $offlineCount,
-                'jumlah_doorprize' => $doorprizeCount,
+                'jumlah_pendaftar'  => $jumlahPendaftar,
+                'jumlah_kehadiran'  => $jumlahHadir,
+                'jumlah_doorprize'  => $doorprizeCount,
+                'online'             => $onlineCount,
+                'offline'            => $offlineCount,
             ],
         ]);
     }

@@ -12,6 +12,10 @@ class EventParticipantController extends Controller
      */
     public function index(Request $request, $eventId)
     {
+        if (!$request->user() || $request->user()->role !== 'superadmin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        
         $query = PendaftaranAcara::with([
             'user',
             'event',
