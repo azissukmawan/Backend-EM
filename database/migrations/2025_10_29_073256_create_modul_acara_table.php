@@ -36,6 +36,8 @@ return new class extends Migration
             $table->dateTime('mdl_pendaftaran_mulai');
             $table->dateTime('mdl_pendaftaran_selesai');
             $table->unsignedInteger('mdl_maks_peserta_eksternal')->nullable();
+            $table->unsignedInteger('mdl_maks_peserta_offline')->nullable();
+            $table->unsignedInteger('mdl_maks_peserta_online')->nullable();
 
 
             // Jadwal utama event
@@ -44,6 +46,9 @@ return new class extends Migration
 
             // Status publik & status internal legal/approval
             $table->enum('mdl_status', ['draft', 'active', 'closed', 'archived'])->default('draft');
+
+            $table->boolean('mdl_presensi_aktif')->default(false); // kalau false, scan QR ditolak
+            $table->string('mdl_kode_qr')->nullable(); // kode QR aktif yang di-generate
 
             // Dokumen/file pendukung
             $table->string('mdl_file_acara')->nullable();                 // modul materi
