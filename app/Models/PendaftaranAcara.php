@@ -9,9 +9,6 @@ class PendaftaranAcara extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
-
-    //
     protected $table = 'pendaftaran_acara';
     protected $fillable = [
         'modul_acara_id',

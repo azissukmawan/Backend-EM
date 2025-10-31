@@ -14,6 +14,7 @@ use App\Http\Controllers\EventStatisticController;
 use App\Http\Controllers\DoorprizeController;
 use App\Http\Controllers\PendaftaranAcaraController;
 
+
 // Public routes - Landing Page Events
 Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
 Route::get('/events/all', [EventController::class, 'all']); // SEMUA event (aktif, upcoming, past)
@@ -94,8 +95,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Doorprize routes - Superadmin only
     Route::post('/admin/events/{eventId}/draw-winner', [DoorprizeController::class, 'drawWinner']);
     Route::get('/admin/events/{eventId}/winners', [DoorprizeController::class, 'getWinners']);
-
-    Route::get('/events', [ModulAcaraController::class, 'index']);
 
     // Admin routes for managing participant
     Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
