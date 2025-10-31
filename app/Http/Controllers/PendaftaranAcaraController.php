@@ -9,11 +9,7 @@ use App\Models\PendaftaranAcara;
 
 class PendaftaranAcaraController extends Controller
 {
-    //
-    /**
-     * Peserta mendaftar ke acara tertentu.
-     * Endpoint: POST /api/acara/{modul_acara_id}/daftar
-     */
+
     public function daftar(Request $request, $modul_acara_id)
     {
         $user = auth()->user();
@@ -187,10 +183,7 @@ class PendaftaranAcaraController extends Controller
         ]);
     }
 
-    /**
-     * Peserta membatalkan pendaftaran acara.
-     * Endpoint: DELETE /api/acara/{modul_acara_id}/batal-daftar
-     */
+
     public function batalDaftar(Request $request, $modul_acara_id)
     {
         $user = auth()->user();
@@ -239,6 +232,81 @@ class PendaftaranAcaraController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pendaftaran Anda telah dibatalkan.',
+        ]);
+    }
+
+    public function listSaya(Request $request)
+    {
+        $user = auth()->user();
+
+        if ($user->role !== 'peserta') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya peserta yang dapat melihat daftar pendaftarannya.',
+            ], 403);
+        }
+
+        // Query param opsional: ?per_page=10
+        $perPage = (int) $request->query('per_page', 10);
+
+        $pendaftaran = PendaftaranAcara::query()
+            ->with([
+                // relasi event (acara)
+                'modulAcara:id,mdl_kode,mdl_slug,mdl_nama,mdl_kategori,mdl_tipe,mdl_lokasi,mdl_acara_mulai,mdl_acara_selesai,mdl_status,mdl_banner_acara,mdl_kode_qr',
+                // relasi profil user (ringan)
+                // 'user:id,name,username,telp',
+
+            ])
+            ->where('user_id', $user->id)
+            ->orderByDesc('waktu_daftar')
+            ->paginate($perPage);
+
+        // Response rapi (tetap simpel)
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar Event Anda.',
+            'data' => $pendaftaran,
+        ]);
+    }
+
+    public function detailEventSaya(Request $request, $eventid)
+    {
+        $user = auth()->user();
+
+        if ($user->role !== 'peserta') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya peserta yang dapat melihat daftar pendaftarannya.',
+            ], 403);
+        }
+
+        // Query param opsional: ?per_page=10
+        $perPage = (int) $request->query('per_page', 10);
+
+        $event = PendaftaranAcara::query()
+            ->with([
+                // relasi event (acara)
+                'modulAcara',
+                // relasi profil user (ringan)
+
+
+            ])
+            ->where('user_id', $user->id)
+            ->where('modul_acara_id', $eventid)
+            ->first();
+
+        if (!$event) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Detail Acara tidak ditemukan.',
+            ], 404);
+        }
+
+        // Response rapi (tetap simpel)
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail Event Anda.',
+            'data' => $event,
         ]);
     }
 }

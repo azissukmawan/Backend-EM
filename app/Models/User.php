@@ -108,14 +108,14 @@ class User extends Authenticatable
     public function acaraTerdaftar(): BelongsToMany
     {
         return $this->belongsToMany(ModulAcara::class, 'pendaftaran_acara', 'user_id', 'modul_acara_id')
-            ->withPivot(['metode_daftar', 'waktu_daftar'])
+            ->withPivot(['metode_daftar', 'waktu_daftar', 'has_doorprize', 'no_sertifikat'])
             ->withTimestamps();
     }
 
     /** Acara yang user terdaftar via undangan (invite-only) */
     public function acaraUndangan(): BelongsToMany
     {
-        return $this->acaraTerdaftar()->wherePivot('metode_daftar', 'invite', '');
+        return $this->acaraTerdaftar()->wherePivot('metode_daftar', 'invite',);
     }
 
     /** Acara yang user daftar sendiri (public) */
