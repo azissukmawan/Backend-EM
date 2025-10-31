@@ -32,7 +32,7 @@ class ProfileController extends Controller
 
             $profilePhoto = null;
             if ($user->detailPeserta && $user->detailPeserta->foto) {
-                $profilePhoto = asset('storage/' . $user->detailPeserta->foto);
+                $profilePhoto = env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $user->detailPeserta->foto;
             }
 
             return response()->json([
@@ -119,11 +119,15 @@ class ProfileController extends Controller
                     $detailPeserta->user_id = $user->id;
                 }
 
-                if ($detailPeserta->foto && Storage::exists('public/' . $detailPeserta->foto)) {
-                    Storage::delete('public/' . $detailPeserta->foto);
+                if ($detailPeserta->foto && Storage::disk('s3')->exists($detailPeserta->foto)) {
+                    Storage::disk('s3')->delete($detailPeserta->foto);
                 }
 
-                $path = $request->file('profile_photo')->store('profile_photos', 'public');
+                $file = $request->file('profile_photo');
+                $path = 'profile_photos/' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+                Storage::disk('s3')->put($path, file_get_contents($file), 'public');
+
                 $detailPeserta->foto = $path;
                 $detailPeserta->save();
             }
@@ -132,7 +136,7 @@ class ProfileController extends Controller
 
             $profilePhoto = null;
             if ($user->detailPeserta && $user->detailPeserta->foto) {
-                $profilePhoto = asset('storage/' . $user->detailPeserta->foto);
+                $profilePhoto = env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $user->detailPeserta->foto;
             }
 
             return response()->json([
