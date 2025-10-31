@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ModulAcara;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ModulAcaraController extends Controller
 {
@@ -108,6 +109,8 @@ class ModulAcaraController extends Controller
             'mdl_banner_acara' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
             // Text field
             'mdl_catatan' => 'nullable|string',
+            // Admin tidak boleh mengirim/menentukan QR secara manual
+            'mdl_kode_qr' => 'prohibited',
         ]);
 
         // Handle file uploads
@@ -130,6 +133,11 @@ class ModulAcaraController extends Controller
         $validated['user_id'] = $request->user()->id;
         $validated['created_by'] = $request->user()->id;
         $acara = ModulAcara::create($validated);
+
+        // Generate QR unik dan simpan ke database
+        $qrCode = $this->generateUniqueQrCode();
+        $acara->mdl_kode_qr = $qrCode;
+        $acara->save();
 
         // Generate public URLs for uploaded files
         $baseUrl = env('AWS_URL') . '/' . env('AWS_BUCKET') . '/';
@@ -181,10 +189,12 @@ class ModulAcaraController extends Controller
             // File uploads
             'mdl_file_acara' => 'nullable|file|mimes:pdf,ppt,pptx,doc,docx|max:10240',
             'mdl_file_rundown' => 'nullable|file|mimes:pdf,xlsx,xls,doc,docx|max:10240',
-            'mdl_template_sertifikat' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'mdl_template_sertifikat' => 'nullable|file|mimes:pdf,ppt,jpg,jpeg,png|max:5120',
             'mdl_banner_acara' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
             // Text field
             'mdl_catatan' => 'nullable|string',
+            // QR tidak boleh diubah
+            'mdl_kode_qr' => 'prohibited',
         ]);
 
         // Handle file uploads - hapus file lama jika ada file baru
@@ -299,6 +309,15 @@ class ModulAcaraController extends Controller
     //         'data' => $event
     //     ]);
     // }
+
+    // Generate QR unik (string) yang belum dipakai event lain
+    protected function generateUniqueQrCode(): string
+    {
+        do {
+            $candidate = 'EVTQR-'.Str::upper(Str::random(8)).'-'.time();
+        } while (ModulAcara::where('mdl_kode_qr', $candidate)->exists());
+        return $candidate;
+    }
 }
 
 
