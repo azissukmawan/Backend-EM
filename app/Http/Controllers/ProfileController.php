@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Models\DetailPeserta;
+use App\Helpers\StorageHelper;
 
 class ProfileController extends Controller
 {
@@ -30,10 +31,7 @@ class ProfileController extends Controller
 
             $user->load('detailPeserta');
 
-            $profilePhoto = null;
-            if ($user->detailPeserta && $user->detailPeserta->foto) {
-                $profilePhoto = env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $user->detailPeserta->foto;
-            }
+            $profilePhoto = StorageHelper::getStorageUrl($user->detailPeserta?->foto);
 
             return response()->json([
                 'success' => true,
@@ -134,10 +132,7 @@ class ProfileController extends Controller
 
             $user->load('detailPeserta');
 
-            $profilePhoto = null;
-            if ($user->detailPeserta && $user->detailPeserta->foto) {
-                $profilePhoto = env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $user->detailPeserta->foto;
-            }
+            $profilePhoto = StorageHelper::getStorageUrl($user->detailPeserta?->foto);
 
             return response()->json([
                 'success' => true,

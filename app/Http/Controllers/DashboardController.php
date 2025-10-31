@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ModulAcara;
 use App\Models\PendaftaranAcara;
+use App\Helpers\StorageHelper;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -195,9 +196,7 @@ class DashboardController extends Controller
                 ? Carbon::parse($event->mdl_acara_selesai)->format('d F Y, H:i') . ' WIB'
                 : null,
             'pendaftaran_selesai' => Carbon::parse($event->mdl_pendaftaran_selesai)->format('d F Y, H:i') . ' WIB',
-            'banner' => $event->mdl_banner_acara
-                ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
-                : null,
+            'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
             'event_time_status' => $eventTimeStatus,
             'registration_status' => $registrationStatus,
         ];
@@ -311,22 +310,14 @@ class DashboardController extends Controller
         // Add media files only if user is registered
         if ($isRegistered) {
             $data['media'] = [
-                'banner' => $event->mdl_banner_acara
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
-                    : null,
-                'file_acara' => $event->mdl_file_acara
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_acara
-                    : null,
-                'file_rundown' => $event->mdl_file_rundown
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_rundown
-                    : null,
+                'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
+                'file_acara' => StorageHelper::getStorageUrl($event->mdl_file_acara),
+                'file_rundown' => StorageHelper::getStorageUrl($event->mdl_file_rundown),
             ];
         } else {
             // Only show banner for non-registered users
             $data['media'] = [
-                'banner' => $event->mdl_banner_acara
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
-                    : null,
+                'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
             ];
         }
 

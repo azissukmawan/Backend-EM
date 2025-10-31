@@ -6,6 +6,7 @@ use App\Models\ModulAcara;
 use Illuminate\Http\Request;
 use App\Models\DetailPeserta;
 use App\Models\PendaftaranAcara;
+use App\Helpers\StorageHelper;
 
 class PendaftaranAcaraController extends Controller
 {
@@ -252,7 +253,7 @@ class PendaftaranAcaraController extends Controller
         $pendaftaran = PendaftaranAcara::query()
             ->with([
                 // relasi event (acara)
-                'modulAcara:id,mdl_kode,mdl_slug,mdl_nama,mdl_kategori,mdl_tipe,mdl_lokasi,mdl_acara_mulai,mdl_acara_selesai,mdl_status,mdl_banner_acara,mdl_kode_qr',
+                'modulAcara:id,mdl_kode,mdl_slug,mdl_nama,mdl_kategori,mdl_tipe,mdl_lokasi,mdl_acara_mulai,mdl_acara_selesai,mdl_status,mdl_banner_acara,mdl_kode_qr,mdl_file_acara,mdl_file_rundown,mdl_template_sertifikat',
                 // relasi profil user (ringan)
                 // 'user:id,name,username,telp',
 
@@ -260,6 +261,20 @@ class PendaftaranAcaraController extends Controller
             ->where('user_id', $user->id)
             ->orderByDesc('waktu_daftar')
             ->paginate($perPage);
+
+        // Transform data untuk menambahkan URL lengkap pada media
+        $pendaftaran->getCollection()->transform(function ($item) {
+            if ($item->modulAcara) {
+                // Tambahkan URL lengkap untuk media files
+                $item->modulAcara->mdl_banner_acara_url = StorageHelper::getStorageUrl($item->modulAcara->mdl_banner_acara);
+                $item->modulAcara->mdl_file_acara_url = StorageHelper::getStorageUrl($item->modulAcara->mdl_file_acara);
+                $item->modulAcara->mdl_file_rundown_url = StorageHelper::getStorageUrl($item->modulAcara->mdl_file_rundown);
+
+                // Hide internal path fields dari response
+                $item->modulAcara->makeHidden(['mdl_banner_acara', 'mdl_file_acara', 'mdl_file_rundown', 'mdl_template_sertifikat']);
+            }
+            return $item;
+        });
 
         // Response rapi (tetap simpel)
         return response()->json([
@@ -300,6 +315,17 @@ class PendaftaranAcaraController extends Controller
                 'success' => false,
                 'message' => 'Detail Acara tidak ditemukan.',
             ], 404);
+        }
+
+        // Transform data untuk menambahkan URL lengkap pada media
+        if ($event->modulAcara) {
+            // Tambahkan URL lengkap untuk media files
+            $event->modulAcara->mdl_banner_acara_url = StorageHelper::getStorageUrl($event->modulAcara->mdl_banner_acara);
+            $event->modulAcara->mdl_file_acara_url = StorageHelper::getStorageUrl($event->modulAcara->mdl_file_acara);
+            $event->modulAcara->mdl_file_rundown_url = StorageHelper::getStorageUrl($event->modulAcara->mdl_file_rundown);
+
+            // Hide internal path fields dari response
+            $event->modulAcara->makeHidden(['mdl_banner_acara', 'mdl_file_acara', 'mdl_file_rundown', 'mdl_template_sertifikat']);
         }
 
         // Response rapi (tetap simpel)
