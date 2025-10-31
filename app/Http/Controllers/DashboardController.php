@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ModulAcara;
+use App\Models\PendaftaranAcara;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -117,7 +118,27 @@ class DashboardController extends Controller
             // Load relationships
             $event->load(['user', 'creator']);
 
-            $eventDetail = $this->transformEventDetailData($event);
+            // Cek apakah user sudah terdaftar
+            $isRegistered = false;
+            $registrationData = null;
+
+            if ($user) {
+                $pendaftaran = PendaftaranAcara::where('modul_acara_id', $event->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if ($pendaftaran) {
+                    $isRegistered = true;
+                    $registrationData = [
+                        'metode_daftar' => $pendaftaran->metode_daftar,
+                        'waktu_daftar' => Carbon::parse($pendaftaran->waktu_daftar)->format('d F Y, H:i') . ' WIB',
+                        'no_sertifikat' => $pendaftaran->no_sertifikat,
+                        'has_doorprize' => $pendaftaran->has_doorprize ?? false,
+                    ];
+                }
+            }
+
+            $eventDetail = $this->transformEventDetailData($event, $isRegistered, $registrationData);
 
             return response()->json([
                 'success' => true,
@@ -186,9 +207,11 @@ class DashboardController extends Controller
      * Transform event data for detail view
      *
      * @param ModulAcara $event
+     * @param bool $isRegistered
+     * @param array|null $registrationData
      * @return array
      */
-    private function transformEventDetailData($event)
+    private function transformEventDetailData($event, $isRegistered = false, $registrationData = null)
     {
         $now = Carbon::now();
         $eventStart = Carbon::parse($event->mdl_acara_mulai);
@@ -214,7 +237,7 @@ class DashboardController extends Controller
             $registrationStatus = 'upcoming';
         }
 
-        return [
+        $data = [
             'id' => $event->id,
             'kode' => $event->mdl_kode,
             'slug' => $event->mdl_slug,
@@ -261,22 +284,6 @@ class DashboardController extends Controller
                 'doorprize_aktif' => $event->mdl_doorprize_aktif,
             ],
 
-            // Files/Media
-            'media' => [
-                'banner' => $event->mdl_banner_acara
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
-                    : null,
-                'file_acara' => $event->mdl_file_acara
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_acara
-                    : null,
-                'file_rundown' => $event->mdl_file_rundown
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_rundown
-                    : null,
-                'template_sertifikat' => $event->mdl_template_sertifikat
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_template_sertifikat
-                    : null,
-            ],
-
             // Additional Info
             'catatan' => $event->mdl_catatan,
             'event_time_status' => $eventTimeStatus,
@@ -288,9 +295,41 @@ class DashboardController extends Controller
                 'email' => $event->user->email,
             ] : null,
 
+            // User Registration Status
+            'is_registered' => $isRegistered,
+
             // Timestamps
             'created_at' => Carbon::parse($event->created_at)->format('d F Y, H:i') . ' WIB',
             'updated_at' => Carbon::parse($event->updated_at)->format('d F Y, H:i') . ' WIB',
         ];
+
+        // Add registration info if user is registered
+        if ($isRegistered && $registrationData) {
+            $data['user_registration'] = $registrationData;
+        }
+
+        // Add media files only if user is registered
+        if ($isRegistered) {
+            $data['media'] = [
+                'banner' => $event->mdl_banner_acara
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
+                    : null,
+                'file_acara' => $event->mdl_file_acara
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_acara
+                    : null,
+                'file_rundown' => $event->mdl_file_rundown
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_rundown
+                    : null,
+            ];
+        } else {
+            // Only show banner for non-registered users
+            $data['media'] = [
+                'banner' => $event->mdl_banner_acara
+                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
+                    : null,
+            ];
+        }
+
+        return $data;
     }
 }
