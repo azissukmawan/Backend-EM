@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Models\DetailPeserta;
 use App\Helpers\StorageHelper;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class ProfileController extends Controller
 {
@@ -77,10 +79,10 @@ class ProfileController extends Controller
                 ], 403);
             }
 
+            // Skip validation for profile_photo, we'll handle it manually
             $validator = Validator::make($request->all(), [
                 'name' => 'sometimes|string|max:255',
                 'telp' => 'sometimes|string|max:20|unique:users,telp,' . $user->id,
-                'profile_photo' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
             if ($validator->fails()) {
@@ -89,6 +91,22 @@ class ProfileController extends Controller
                     'message' => 'Validation error',
                     'errors' => $validator->errors()
                 ], 422);
+            }
+
+            // Validate profile_photo manually if exists
+            if ($request->hasFile('profile_photo')) {
+                $file = $request->file('profile_photo');
+
+                // Check if it's a valid image
+                if (!in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation error',
+                        'errors' => [
+                            'profile_photo' => ['The profile photo must be an image (jpeg, png, jpg, gif).']
+                        ]
+                    ], 422);
+                }
             }
 
             if ($request->has('email')) {
@@ -117,14 +135,54 @@ class ProfileController extends Controller
                     $detailPeserta->user_id = $user->id;
                 }
 
+                // Delete old photo if exists
                 if ($detailPeserta->foto && Storage::disk('s3')->exists($detailPeserta->foto)) {
                     Storage::disk('s3')->delete($detailPeserta->foto);
                 }
 
                 $file = $request->file('profile_photo');
-                $path = 'profile_photos/' . uniqid() . '.' . $file->getClientOriginalExtension();
 
-                Storage::disk('s3')->put($path, file_get_contents($file), 'public');
+                // Initialize ImageManager with GD driver
+                $manager = new ImageManager(new Driver());
+
+                // Auto-compress image to be less than 1MB
+                $image = $manager->read($file);
+
+                // Start with quality 90
+                $quality = 90;
+                $compressedImage = null;
+
+                // Resize if image is too large (max 1920px width)
+                if ($image->width() > 1920) {
+                    $image->scale(width: 1920);
+                }
+
+                // Compress until file size is less than 1MB
+                do {
+                    $compressedImage = $image->toJpeg($quality);
+                    $fileSize = strlen($compressedImage);
+
+                    // If file is less than 1MB, break
+                    if ($fileSize < 314572) { // 3MB = 3145728 bytes
+                        break;
+                    }
+
+                    // Reduce quality by 5
+                    $quality -= 5;
+
+                    // Prevent infinite loop (minimum quality 30)
+                    if ($quality < 30) {
+                        // If still too large, resize more aggressively
+                        $image->scale(width: 1200);
+                        $quality = 75;
+                        $compressedImage = $image->toJpeg($quality);
+                        break;
+                    }
+                } while (true);
+
+                $path = 'profile_photos/' . uniqid() . '.jpg';
+
+                Storage::disk('s3')->put($path, $compressedImage, 'public');
 
                 $detailPeserta->foto = $path;
                 $detailPeserta->save();
