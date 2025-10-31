@@ -104,4 +104,8 @@ class User extends Authenticatable
             ]);
         }
     }
+    public function pendaftarans()
+    {
+        return $this->hasMany(PendaftaranAcara::class, 'user_id');
+    }
 }

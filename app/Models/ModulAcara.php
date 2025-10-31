@@ -111,4 +111,9 @@ class ModulAcara extends Model
             ->withPivot(['waktu_absen', 'latitude', 'longitude'])
             ->withTimestamps();
     }
+
+    public function pendaftarans()
+    {
+        return $this->hasMany(PendaftaranAcara::class, 'modul_acara_id');
+    }
 }
