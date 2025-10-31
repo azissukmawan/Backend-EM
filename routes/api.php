@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/events', [ModulAcaraController::class, 'index']);
 
 
+    // Pendaftaran Acara
     Route::post('/events/{eventId}/daftar', [PendaftaranAcaraController::class, 'daftar']);
     Route::post('/events/{eventId}/daftar-invite', [PendaftaranAcaraController::class, 'daftarInvite']);
     Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
