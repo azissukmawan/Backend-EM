@@ -13,6 +13,7 @@ use App\Http\Controllers\EventStatisticController;
 
 use App\Http\Controllers\DoorprizeController;
 use App\Http\Controllers\PendaftaranAcaraController;
+use App\Http\Controllers\PresensiController;
 
 
 // Public routes - Landing Page Events
@@ -106,4 +107,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
     Route::get('/me/pendaftaran', [PendaftaranAcaraController::class, 'listSaya']);
     Route::get('events/{eventId}/me', [PendaftaranAcaraController::class, 'detailEventSaya']);
+});
+
+// Presensi Acara routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/presensi', [PresensiController::class, 'store']);               // peserta absen
+    Route::get('/acara/{id}/presensi', [PresensiController::class, 'index']);     // daftar presensi (panitia)
+    Route::get('/acara/{id}/presensi/me', [PresensiController::class, 'me']);     // status user sendiri
+    Route::get('/acara/{id}/qr-code', [PresensiController::class, 'showQr']);     // tampilkan QR event
+    Route::post('/acara/{id}/presensi/reset', [PresensiController::class, 'reset']); // reset presensi
 });
