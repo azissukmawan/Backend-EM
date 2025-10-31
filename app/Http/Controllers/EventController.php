@@ -223,6 +223,8 @@ class EventController extends Controller
                         'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
                             ? substr($event->mdl_deskripsi, 0, 150) . '...'
                             : $event->mdl_deskripsi,
+                        'mdl_kode' => $event->mdl_kode,
+                        'mdl_presensi_aktif' => $event->mdl_presensi_aktif,
                     ];
                 });
 
