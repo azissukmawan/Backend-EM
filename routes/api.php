@@ -14,6 +14,7 @@ use App\Http\Controllers\EventStatisticController;
 use App\Http\Controllers\DoorprizeController;
 use App\Http\Controllers\PendaftaranAcaraController;
 use App\Http\Controllers\PresensiController;
+use App\Http\Controllers\ToggleQRController;
 
 
 // Public routes - Landing Page Events
@@ -116,4 +117,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/acara/{id}/presensi/me', [PresensiController::class, 'me']);     // status user sendiri
     Route::get('/acara/{id}/qr-code', [PresensiController::class, 'showQr']);     // tampilkan QR event
     Route::post('/acara/{id}/presensi/reset', [PresensiController::class, 'reset']); // reset presensi
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/admin/event/{id}/presensi/toggle', [ToggleQRController::class, 'toggle']);
 });
