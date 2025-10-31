@@ -290,6 +290,8 @@ class EventController extends Controller
                 'slug' => $event->mdl_slug,
                 'nama' => $event->mdl_nama,
                 'deskripsi' => $event->mdl_deskripsi,
+                'mdl_kode' => $event->mdl_kode,
+                'mdl_presensi_aktif' => $event->mdl_presensi_aktif,
                 'tipe' => ucfirst($event->mdl_tipe),
                 'status_acara' => $statusAcara,
                 'lokasi' => $event->mdl_lokasi,
