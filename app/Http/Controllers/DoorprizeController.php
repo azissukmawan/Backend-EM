@@ -71,4 +71,46 @@ class DoorprizeController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Get all winners for a specific event.
+     *
+     * @param int $eventId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getWinners($eventId)
+    {
+        // Validate that the event exists
+        $event = ModulAcara::findOrFail($eventId);
+
+        // Get all winners for this event
+        $winners = DB::table('pendaftaran_acara')
+            ->join('users', 'pendaftaran_acara.user_id', '=', 'users.id')
+            ->where('pendaftaran_acara.modul_acara_id', $eventId)
+            ->where('pendaftaran_acara.has_doorprize', true)
+            ->select(
+                'users.id',
+                'users.name',
+                'users.username',
+                'users.email',
+                'pendaftaran_acara.waktu_daftar',
+                'pendaftaran_acara.metode_daftar'
+            )
+            ->orderBy('pendaftaran_acara.updated_at', 'desc') // Assuming updated_at is when they won
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Winners retrieved successfully.',
+            'data' => [
+                'event' => [
+                    'id' => $event->id,
+                    'name' => $event->mdl_nama,
+                    'doorprize_active' => $event->mdl_doorprize_aktif,
+                ],
+                'winners' => $winners,
+                'total_winners' => $winners->count()
+            ]
+        ]);
+    }
 }

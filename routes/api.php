@@ -55,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Doorprize routes
     Route::post('/admin/events/{eventId}/draw-winner', [DoorprizeController::class, 'drawWinner']);
+    Route::get('/admin/events/{eventId}/winners', [DoorprizeController::class, 'getWinners']);
 
     Route::get('/events', [ModulAcaraController::class, 'index']);
 });
