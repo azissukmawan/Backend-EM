@@ -53,7 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
 
-    // Doorprize routes
+    // Doorprize routes - Superadmin only
     Route::post('/admin/events/{eventId}/draw-winner', [DoorprizeController::class, 'drawWinner']);
     Route::get('/admin/events/{eventId}/winners', [DoorprizeController::class, 'getWinners']);
 

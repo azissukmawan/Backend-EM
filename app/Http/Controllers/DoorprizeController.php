@@ -6,6 +6,7 @@ use App\Models\ModulAcara;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class DoorprizeController extends Controller
 {
@@ -18,6 +19,11 @@ class DoorprizeController extends Controller
      */
     public function drawWinner(Request $request, $eventId)
     {
+        // Check if user is superadmin
+        if (!$request->user() || $request->user()->role !== 'superadmin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         // Validate that the event exists and has doorprize active
         $event = ModulAcara::findOrFail($eventId);
 
@@ -80,6 +86,14 @@ class DoorprizeController extends Controller
      */
     public function getWinners($eventId)
     {
+        // Check if user is superadmin
+        if (!Auth::check() || Auth::user()->role !== 'superadmin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden: Only superadmin can perform this action.'
+            ], 403);
+        }
+
         // Validate that the event exists
         $event = ModulAcara::findOrFail($eventId);
 
