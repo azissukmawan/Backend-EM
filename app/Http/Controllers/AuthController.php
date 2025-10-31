@@ -323,6 +323,7 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'telp' => $user->telp,
                     'role' => $user->role,
+                    'status_karyawan' => $user->detailPeserta->status_karyawan ?? null,
                     'email_verified_at' => $user->email_verified_at,
                 ],
                 'access_token' => $token,

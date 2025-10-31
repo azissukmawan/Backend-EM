@@ -19,7 +19,7 @@ return new class extends Migration
             $table->enum('metode_daftar', ['self', 'invite'])->default('self');
             $table->timestamp('waktu_daftar')->useCurrent();
             $table->boolean('has_doorprize')->default(false);
-            $table->string('no_sertifikat', 30)->default(null);
+            $table->string('no_sertifikat', 30)->nullable()->default(null);
 
 
             $table->timestamps();
