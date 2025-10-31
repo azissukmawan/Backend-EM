@@ -7,6 +7,7 @@ use App\Models\ModulAcara;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Helpers\StorageHelper;
 
 class ModulAcaraController extends Controller
 {
@@ -32,12 +33,11 @@ class ModulAcaraController extends Controller
         $events = $query->latest()->paginate(10);
 
         // Generate public URLs for uploaded files in each event
-        $baseUrl = env('AWS_URL') . '/' . env('AWS_BUCKET') . '/';
         foreach ($events as $event) {
-            $event->mdl_file_acara_url = $event->mdl_file_acara ? $baseUrl . $event->mdl_file_acara : null;
-            $event->mdl_file_rundown_url = $event->mdl_file_rundown ? $baseUrl . $event->mdl_file_rundown : null;
-            $event->mdl_template_sertifikat_url = $event->mdl_template_sertifikat ? $baseUrl . $event->mdl_template_sertifikat : null;
-            $event->mdl_banner_acara_url = $event->mdl_banner_acara ? $baseUrl . $event->mdl_banner_acara : null;
+            $event->mdl_file_acara_url = StorageHelper::getStorageUrl($event->mdl_file_acara);
+            $event->mdl_file_rundown_url = StorageHelper::getStorageUrl($event->mdl_file_rundown);
+            $event->mdl_template_sertifikat_url = StorageHelper::getStorageUrl($event->mdl_template_sertifikat);
+            $event->mdl_banner_acara_url = StorageHelper::getStorageUrl($event->mdl_banner_acara);
 
             // Hide internal path fields from response
             $event->makeHidden(['mdl_file_acara', 'mdl_file_rundown', 'mdl_template_sertifikat', 'mdl_banner_acara']);
@@ -62,11 +62,10 @@ class ModulAcaraController extends Controller
         }
 
         // Generate public URLs for uploaded files
-        $baseUrl = env('AWS_URL') . '/' . env('AWS_BUCKET') . '/';
-        $event->mdl_file_acara_url = $event->mdl_file_acara ? $baseUrl . $event->mdl_file_acara : null;
-        $event->mdl_file_rundown_url = $event->mdl_file_rundown ? $baseUrl . $event->mdl_file_rundown : null;
-        $event->mdl_template_sertifikat_url = $event->mdl_template_sertifikat ? $baseUrl . $event->mdl_template_sertifikat : null;
-        $event->mdl_banner_acara_url = $event->mdl_banner_acara ? $baseUrl . $event->mdl_banner_acara : null;
+        $event->mdl_file_acara_url = StorageHelper::getStorageUrl($event->mdl_file_acara);
+        $event->mdl_file_rundown_url = StorageHelper::getStorageUrl($event->mdl_file_rundown);
+        $event->mdl_template_sertifikat_url = StorageHelper::getStorageUrl($event->mdl_template_sertifikat);
+        $event->mdl_banner_acara_url = StorageHelper::getStorageUrl($event->mdl_banner_acara);
 
         // Hide internal path fields from response
         $event->makeHidden(['mdl_file_acara', 'mdl_file_rundown', 'mdl_template_sertifikat', 'mdl_banner_acara']);
@@ -140,11 +139,10 @@ class ModulAcaraController extends Controller
         $acara->save();
 
         // Generate public URLs for uploaded files
-        $baseUrl = env('AWS_URL') . '/' . env('AWS_BUCKET') . '/';
-        $acara->mdl_file_acara_url = $acara->mdl_file_acara ? $baseUrl . $acara->mdl_file_acara : null;
-        $acara->mdl_file_rundown_url = $acara->mdl_file_rundown ? $baseUrl . $acara->mdl_file_rundown : null;
-        $acara->mdl_template_sertifikat_url = $acara->mdl_template_sertifikat ? $baseUrl . $acara->mdl_template_sertifikat : null;
-        $acara->mdl_banner_acara_url = $acara->mdl_banner_acara ? $baseUrl . $acara->mdl_banner_acara : null;
+        $acara->mdl_file_acara_url = StorageHelper::getStorageUrl($acara->mdl_file_acara);
+        $acara->mdl_file_rundown_url = StorageHelper::getStorageUrl($acara->mdl_file_rundown);
+        $acara->mdl_template_sertifikat_url = StorageHelper::getStorageUrl($acara->mdl_template_sertifikat);
+        $acara->mdl_banner_acara_url = StorageHelper::getStorageUrl($acara->mdl_banner_acara);
 
         // Hide internal path fields from response
         $acara->makeHidden(['mdl_file_acara', 'mdl_file_rundown', 'mdl_template_sertifikat', 'mdl_banner_acara']);
@@ -231,11 +229,10 @@ class ModulAcaraController extends Controller
         $acara->update($validated);
 
         // Generate public URLs for uploaded files
-        $baseUrl = env('AWS_URL') . '/' . env('AWS_BUCKET') . '/';
-        $acara->mdl_file_acara_url = $acara->mdl_file_acara ? $baseUrl . $acara->mdl_file_acara : null;
-        $acara->mdl_file_rundown_url = $acara->mdl_file_rundown ? $baseUrl . $acara->mdl_file_rundown : null;
-        $acara->mdl_template_sertifikat_url = $acara->mdl_template_sertifikat ? $baseUrl . $acara->mdl_template_sertifikat : null;
-        $acara->mdl_banner_acara_url = $acara->mdl_banner_acara ? $baseUrl . $acara->mdl_banner_acara : null;
+        $acara->mdl_file_acara_url = StorageHelper::getStorageUrl($acara->mdl_file_acara);
+        $acara->mdl_file_rundown_url = StorageHelper::getStorageUrl($acara->mdl_file_rundown);
+        $acara->mdl_template_sertifikat_url = StorageHelper::getStorageUrl($acara->mdl_template_sertifikat);
+        $acara->mdl_banner_acara_url = StorageHelper::getStorageUrl($acara->mdl_banner_acara);
 
         // Hide internal path fields from response
         $acara->makeHidden(['mdl_file_acara', 'mdl_file_rundown', 'mdl_template_sertifikat', 'mdl_banner_acara']);
