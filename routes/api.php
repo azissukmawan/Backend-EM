@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoorprizeController;
+use App\Http\Controllers\PendaftaranAcaraController;
 
 // Public routes - Landing Page Events
 Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
@@ -49,7 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/dashboard/events/{identifier}', [DashboardController::class, 'show']);
     });
-    
+
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
 
@@ -58,4 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/events/{eventId}/winners', [DoorprizeController::class, 'getWinners']);
 
     Route::get('/events', [ModulAcaraController::class, 'index']);
+
+
+    Route::post('/events/{eventId}/daftar', [PendaftaranAcaraController::class, 'daftar']);
+    Route::post('/events/{eventId}/daftar-invite', [PendaftaranAcaraController::class, 'daftarInvite']);
+    Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
 });
