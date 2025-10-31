@@ -8,6 +8,9 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EventParticipantController;
+use App\Http\Controllers\EventStatisticController;
+
 use App\Http\Controllers\DoorprizeController;
 use App\Http\Controllers\PendaftaranAcaraController;
 
@@ -17,6 +20,15 @@ Route::get('/events/all', [EventController::class, 'all']); // SEMUA event (akti
 Route::get('/events/upcoming', [EventController::class, 'upcoming']); // Event AKAN DATANG
 Route::get('/events/past', [EventController::class, 'past']); // Event SUDAH SELESAI
 Route::get('/events/{identifier}', [EventController::class, 'show']); // Detail event by ID or slug
+Route::get('/events/{id}/participants', [EventParticipantController::class, 'index']);
+
+// Auth routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // Auth routes - Register (rate limited)
 Route::middleware('throttle:api')->group(function () {
@@ -43,6 +55,7 @@ Route::middleware('throttle:reset')->group(function () {
 // Public routes - Dashboard Stats
 Route::get('/dashboard-admin/stats', [DashboardAdminController::class, 'stats']);
 
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -52,10 +65,18 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     // Admin routes for managing events
     Route::get('/admin/events', [ModulAcaraController::class, 'index']);
+    Route::get('/admin/events/{id}', [ModulAcaraController::class, 'show']);
     // CRUD superadmin
     Route::post('/admin/events', [ModulAcaraController::class, 'store']);
     Route::put('/admin/events/{id}', [ModulAcaraController::class, 'update']);
     Route::delete('/admin/events/{id}', [ModulAcaraController::class, 'destroy']);
+
+    // Alternative routes (modul-acara)
+    Route::get('/modul-acara', [ModulAcaraController::class, 'index']);
+    Route::get('/modul-acara/{id}', [ModulAcaraController::class, 'show']);
+    Route::post('/modul-acara', [ModulAcaraController::class, 'store']);
+    Route::put('/modul-acara/{id}', [ModulAcaraController::class, 'update']);
+    Route::delete('/modul-acara/{id}', [ModulAcaraController::class, 'destroy']);
     // Peserta routes atau GET biasa
 
     Route::prefix('profile')->group(function () {
@@ -76,6 +97,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/events', [ModulAcaraController::class, 'index']);
 
+    // Admin routes for managing participant
+    Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
+    Route::get('/admin/events/{eventId}/stats', [EventStatisticController::class, 'show']);
 
     // Pendaftaran Acara
     Route::post('/events/{eventId}/daftar', [PendaftaranAcaraController::class, 'daftar']);
