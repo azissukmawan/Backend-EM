@@ -10,7 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\EventStatisticController;
-
+use App\Http\Controllers\SertifikatController;
 use App\Http\Controllers\DoorprizeController;
 use App\Http\Controllers\PendaftaranAcaraController;
 use App\Http\Controllers\PresensiController;
@@ -112,6 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
     Route::get('/me/pendaftaran', [PendaftaranAcaraController::class, 'listSaya']);
     Route::get('events/{eventId}/me', [PendaftaranAcaraController::class, 'detailEventSaya']);
+    Route::post('/sertifikat/generate', [SertifikatController::class, 'generate']);
 });
 
 // Presensi Acara routes

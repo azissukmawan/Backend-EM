@@ -12,7 +12,7 @@ class PresensiAcara extends Model
     protected $table = 'presensi_acara';
     protected $guarded = [];
 
-    public function event()
+    public function modulAcara()
     {
         return $this->belongsTo(ModulAcara::class, 'modul_acara_id');
     }
