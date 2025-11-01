@@ -72,6 +72,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/admin/events/{id}', [ModulAcaraController::class, 'update']);
     Route::delete('/admin/events/{id}', [ModulAcaraController::class, 'destroy']);
 
+    // QR & Presensi (khusus superadmin)
+    Route::get('/admin/events/{id}/qr', [ModulAcaraController::class, 'qr']);
+    Route::patch('/admin/events/{id}/presensi', [ModulAcaraController::class, 'setPresensiAktif']);
+
     // Alternative routes (modul-acara)
     Route::get('/modul-acara', [ModulAcaraController::class, 'index']);
     Route::get('/modul-acara/{id}', [ModulAcaraController::class, 'show']);

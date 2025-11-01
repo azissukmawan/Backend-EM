@@ -78,6 +78,65 @@ class ModulAcaraController extends Controller
         ]);
     }
 
+    /**
+     * Ambil informasi QR untuk event tertentu (khusus admin/superadmin)
+     * Response: mdl_kode_qr, mdl_presensi_aktif, id
+     */
+    public function qr($id, Request $request)
+    {
+        if (!$request->user() || $request->user()->role !== 'superadmin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        $event = ModulAcara::find($id);
+        if (!$event) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Acara tidak ditemukan'
+            ], 404);
+        }
+        return response()->json([
+            'status' => true,
+            'message' => 'QR acara berhasil diambil',
+            'data' => [
+                'id' => $event->id,
+                'mdl_kode_qr' => $event->mdl_kode_qr,
+                'mdl_presensi_aktif' => (bool) $event->mdl_presensi_aktif,
+            ]
+        ]);
+    }
+
+    /**
+     * Set status presensi aktif/nonaktif untuk event (toggle via payload)
+     * Body: { "aktif": true|false }
+     */
+    public function setPresensiAktif($id, Request $request)
+    {
+        if (!$request->user() || $request->user()->role !== 'superadmin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        $validated = $request->validate([
+            'aktif' => 'required|boolean',
+        ]);
+        $event = ModulAcara::find($id);
+        if (!$event) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Acara tidak ditemukan'
+            ], 404);
+        }
+        $event->mdl_presensi_aktif = $validated['aktif'];
+        $event->updated_by = $request->user()->id;
+        $event->save();
+        return response()->json([
+            'status' => true,
+            'message' => 'Status presensi berhasil diperbarui',
+            'data' => [
+                'id' => $event->id,
+                'mdl_presensi_aktif' => (bool) $event->mdl_presensi_aktif,
+            ]
+        ]);
+    }
+
     // Fungsi CREATE acara
     public function store(Request $request)
     {
