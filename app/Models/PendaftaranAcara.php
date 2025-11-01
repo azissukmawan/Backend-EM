@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PendaftaranAcara extends Model
 {
@@ -28,9 +29,9 @@ class PendaftaranAcara extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+
     public function presensi()
     {
-        return $this->hasOne(PresensiAcara::class, 'user_id', 'user_id');
-        return $this->belongsTo(User::class);
+        return $this->hasOne(PresensiAcara::class, 'pendaftaran_acara_id');
     }
 }

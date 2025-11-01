@@ -11,82 +11,83 @@ class PresensiController extends Controller
 {
 
     public function store(Request $request)
-{
-    $user = auth()->user();
+    {
+        $user = auth()->user();
 
-    $request->validate([
-        'kode' => 'required',
-    ]);
+        $request->validate([
+            'kode' => 'required',
+        ]);
 
-    // Cari event berdasarkan kode QR
-    $event = ModulAcara::where('mdl_kode_qr', $request->kode)->first();
+        // Cari event berdasarkan kode QR
+        $event = ModulAcara::where('mdl_kode_qr', $request->kode)->first();
 
-    if (!$event) {
-        return response()->json(['status' => false, 'message' => 'Event tidak ditemukan'], 404);
+        if (!$event) {
+            return response()->json(['status' => false, 'message' => 'Event tidak ditemukan'], 404);
+        }
+
+        if (!$event->mdl_presensi_aktif) {
+            return response()->json(['status' => false, 'message' => 'Presensi belum dibuka'], 400);
+        }
+
+        // Pastikan user terdaftar di event
+        $pendaftaran = PendaftaranAcara::where('modul_acara_id', $event->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$pendaftaran) {
+            return response()->json(['status' => false, 'message' => 'Anda belum terdaftar di event ini'], 403);
+        }
+
+        // Validasi waktu presensi
+        $now = now();
+        if ($now->lt($event->mdl_acara_mulai) || ($event->mdl_acara_selesai && $now->gt($event->mdl_acara_selesai))) {
+            return response()->json(['status' => false, 'message' => 'Presensi belum dibuka atau sudah ditutup'], 400);
+        }
+
+        // Cegah double absensi
+        $sudahAbsen = PresensiAcara::where('modul_acara_id', $event->id)
+            ->where('user_id', $user->id)
+            ->exists();
+
+        if ($sudahAbsen) {
+            return response()->json(['status' => false, 'message' => 'Anda sudah melakukan presensi'], 400);
+        }
+
+        // Simpan presensi baru
+        PresensiAcara::create([
+            'pendaftaran_acara_id' => $pendaftaran->id,
+            'modul_acara_id' => $event->id,
+            'user_id' => $user->id,
+            'waktu_absen' => now(),
+            'status' => 'Hadir',
+        ]);
+
+        /**
+         * 🔹 Generate nomor sertifikat unik
+         * Format: {mdl_kode}/{tahun}/{urutan tiga digit}
+         */
+        $tahun = now()->year;
+
+        // Hitung urutan presensi untuk event ini
+        $jumlahPresensi = PresensiAcara::where('modul_acara_id', $event->id)->count();
+
+        // Nomor urut dengan padding 3 digit
+        $urutan = str_pad($jumlahPresensi, 3, '0', STR_PAD_LEFT);
+
+        // Buat nomor sertifikat
+        $noSertifikat = "{$event->mdl_kode}/{$tahun}/{$urutan}";
+
+        // Update ke tabel PendaftaranAcara
+        $pendaftaran->update([
+            'no_sertifikat' => $noSertifikat,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Presensi berhasil dicatat',
+            'no_sertifikat' => $noSertifikat,
+        ]);
     }
-
-    if (!$event->mdl_presensi_aktif) {
-        return response()->json(['status' => false, 'message' => 'Presensi belum dibuka'], 400);
-    }
-
-    // Pastikan user terdaftar di event
-    $pendaftaran = PendaftaranAcara::where('modul_acara_id', $event->id)
-        ->where('user_id', $user->id)
-        ->first();
-
-    if (!$pendaftaran) {
-        return response()->json(['status' => false, 'message' => 'Anda belum terdaftar di event ini'], 403);
-    }
-
-    // Validasi waktu presensi
-    $now = now();
-    if ($now->lt($event->mdl_acara_mulai) || ($event->mdl_acara_selesai && $now->gt($event->mdl_acara_selesai))) {
-        return response()->json(['status' => false, 'message' => 'Presensi belum dibuka atau sudah ditutup'], 400);
-    }
-
-    // Cegah double absensi
-    $sudahAbsen = PresensiAcara::where('modul_acara_id', $event->id)
-        ->where('user_id', $user->id)
-        ->exists();
-
-    if ($sudahAbsen) {
-        return response()->json(['status' => false, 'message' => 'Anda sudah melakukan presensi'], 400);
-    }
-
-    // Simpan presensi baru
-    PresensiAcara::create([
-        'modul_acara_id' => $event->id,
-        'user_id' => $user->id,
-        'waktu_absen' => now(),
-        'status' => 'Hadir',
-    ]);
-
-    /**
-     * 🔹 Generate nomor sertifikat unik
-     * Format: {mdl_kode}/{tahun}/{urutan tiga digit}
-     */
-    $tahun = now()->year;
-
-    // Hitung urutan presensi untuk event ini
-    $jumlahPresensi = PresensiAcara::where('modul_acara_id', $event->id)->count();
-
-    // Nomor urut dengan padding 3 digit
-    $urutan = str_pad($jumlahPresensi, 3, '0', STR_PAD_LEFT);
-
-    // Buat nomor sertifikat
-    $noSertifikat = "{$event->mdl_kode}/{$tahun}/{$urutan}";
-
-    // Update ke tabel PendaftaranAcara
-    $pendaftaran->update([
-        'no_sertifikat' => $noSertifikat,
-    ]);
-
-    return response()->json([
-        'status' => true,
-        'message' => 'Presensi berhasil dicatat',
-        'no_sertifikat' => $noSertifikat,
-    ]);
-}
 
 
     /**
