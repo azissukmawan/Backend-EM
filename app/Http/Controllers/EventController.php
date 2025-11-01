@@ -27,7 +27,20 @@ class EventController extends Controller
                 })
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
-                ->map(function ($event) {
+                ->map(function ($event) use ($now) {
+                    // Tentukan status pendaftaran
+                    $statusPendaftaran = 'Ditutup';
+                    if ($event->mdl_pendaftaran_mulai && $event->mdl_pendaftaran_selesai) {
+                        $pendaftaranMulai = Carbon::parse($event->mdl_pendaftaran_mulai);
+                        $pendaftaranSelesai = Carbon::parse($event->mdl_pendaftaran_selesai);
+                        
+                        if ($now->lt($pendaftaranMulai)) {
+                            $statusPendaftaran = 'Segera Hadir';
+                        } elseif ($now->between($pendaftaranMulai, $pendaftaranSelesai)) {
+                            $statusPendaftaran = 'Bisa Daftar';
+                        }
+                    }
+
                     return [
                         'id' => $event->id,
                         'slug' => $event->mdl_slug,
@@ -38,7 +51,14 @@ class EventController extends Controller
                         'tanggal_selesai' => $event->mdl_acara_selesai
                             ? Carbon::parse($event->mdl_acara_selesai)->format('d M Y, H:i')
                             : null,
+                        'pendaftaran_mulai' => $event->mdl_pendaftaran_mulai 
+                            ? Carbon::parse($event->mdl_pendaftaran_mulai)->format('d M Y, H:i')
+                            : null,
+                        'pendaftaran_selesai' => $event->mdl_pendaftaran_selesai
+                            ? Carbon::parse($event->mdl_pendaftaran_selesai)->format('d M Y, H:i')
+                            : null,
                         'status_acara' => 'Sedang Berlangsung',
+                        'status_pendaftaran' => $statusPendaftaran,
                         'banner' => $event->mdl_banner_acara ? url('storage/' . $event->mdl_banner_acara) : null,
                         'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
                             ? substr($event->mdl_deskripsi, 0, 150) . '...'
@@ -84,6 +104,19 @@ class EventController extends Controller
                     $startDate = Carbon::parse($event->mdl_acara_mulai);
                     $daysUntil = $now->diffInDays($startDate);
 
+                    // Tentukan status pendaftaran
+                    $statusPendaftaran = 'Ditutup';
+                    if ($event->mdl_pendaftaran_mulai && $event->mdl_pendaftaran_selesai) {
+                        $pendaftaranMulai = Carbon::parse($event->mdl_pendaftaran_mulai);
+                        $pendaftaranSelesai = Carbon::parse($event->mdl_pendaftaran_selesai);
+                        
+                        if ($now->lt($pendaftaranMulai)) {
+                            $statusPendaftaran = 'Segera Hadir';
+                        } elseif ($now->between($pendaftaranMulai, $pendaftaranSelesai)) {
+                            $statusPendaftaran = 'Bisa Daftar';
+                        }
+                    }
+
                     return [
                         'id' => $event->id,
                         'slug' => $event->mdl_slug,
@@ -92,8 +125,15 @@ class EventController extends Controller
                         'lokasi' => $event->mdl_lokasi,
                         'tanggal_mulai' => $startDate->format('d M Y, H:i'),
                         'tanggal_mulai_raw' => $event->mdl_acara_mulai,
+                        'pendaftaran_mulai' => $event->mdl_pendaftaran_mulai 
+                            ? Carbon::parse($event->mdl_pendaftaran_mulai)->format('d M Y, H:i')
+                            : null,
+                        'pendaftaran_selesai' => $event->mdl_pendaftaran_selesai
+                            ? Carbon::parse($event->mdl_pendaftaran_selesai)->format('d M Y, H:i')
+                            : null,
                         'hari_lagi' => $daysUntil . ' hari lagi',
                         'status_acara' => 'Akan Datang',
+                        'status_pendaftaran' => $statusPendaftaran,
                         'banner' => $event->mdl_banner_acara ? url('storage/' . $event->mdl_banner_acara) : null,
                         'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
                             ? substr($event->mdl_deskripsi, 0, 150) . '...'
@@ -149,6 +189,19 @@ class EventController extends Controller
 
                     $daysAgo = $endDate->diffInDays($now);
 
+                    // Tentukan status pendaftaran
+                    $statusPendaftaran = 'Ditutup';
+                    if ($event->mdl_pendaftaran_mulai && $event->mdl_pendaftaran_selesai) {
+                        $pendaftaranMulai = Carbon::parse($event->mdl_pendaftaran_mulai);
+                        $pendaftaranSelesai = Carbon::parse($event->mdl_pendaftaran_selesai);
+                        
+                        if ($now->lt($pendaftaranMulai)) {
+                            $statusPendaftaran = 'Segera Hadir';
+                        } elseif ($now->between($pendaftaranMulai, $pendaftaranSelesai)) {
+                            $statusPendaftaran = 'Bisa Daftar';
+                        }
+                    }
+
                     return [
                         'id' => $event->id,
                         'slug' => $event->mdl_slug,
@@ -159,8 +212,15 @@ class EventController extends Controller
                         'tanggal_selesai' => $event->mdl_acara_selesai
                             ? Carbon::parse($event->mdl_acara_selesai)->format('d M Y, H:i')
                             : null,
+                        'pendaftaran_mulai' => $event->mdl_pendaftaran_mulai 
+                            ? Carbon::parse($event->mdl_pendaftaran_mulai)->format('d M Y, H:i')
+                            : null,
+                        'pendaftaran_selesai' => $event->mdl_pendaftaran_selesai
+                            ? Carbon::parse($event->mdl_pendaftaran_selesai)->format('d M Y, H:i')
+                            : null,
                         'hari_lalu' => $daysAgo . ' hari yang lalu',
                         'status_acara' => 'Selesai',
+                        'status_pendaftaran' => $statusPendaftaran,
                         'banner' => $event->mdl_banner_acara ? url('storage/' . $event->mdl_banner_acara) : null,
                     ];
                 });
@@ -211,6 +271,19 @@ class EventController extends Controller
                         $statusAcara = $startDate->diffInDays($now) > 1 ? 'Selesai' : 'Sedang Berlangsung';
                     }
 
+                    // Tentukan status pendaftaran
+                    $statusPendaftaran = 'Ditutup';
+                    if ($event->mdl_pendaftaran_mulai && $event->mdl_pendaftaran_selesai) {
+                        $pendaftaranMulai = Carbon::parse($event->mdl_pendaftaran_mulai);
+                        $pendaftaranSelesai = Carbon::parse($event->mdl_pendaftaran_selesai);
+                        
+                        if ($now->lt($pendaftaranMulai)) {
+                            $statusPendaftaran = 'Segera Hadir';
+                        } elseif ($now->between($pendaftaranMulai, $pendaftaranSelesai)) {
+                            $statusPendaftaran = 'Bisa Daftar';
+                        }
+                    }
+
                     return [
                         'id' => $event->id,
                         'slug' => $event->mdl_slug,
@@ -219,7 +292,14 @@ class EventController extends Controller
                         'lokasi' => $event->mdl_lokasi,
                         'tanggal_mulai' => $startDate->format('d M Y, H:i'),
                         'tanggal_mulai_raw' => $event->mdl_acara_mulai,
+                        'pendaftaran_mulai' => $event->mdl_pendaftaran_mulai 
+                            ? Carbon::parse($event->mdl_pendaftaran_mulai)->format('d M Y, H:i')
+                            : null,
+                        'pendaftaran_selesai' => $event->mdl_pendaftaran_selesai
+                            ? Carbon::parse($event->mdl_pendaftaran_selesai)->format('d M Y, H:i')
+                            : null,
                         'status_acara' => $statusAcara,
+                        'status_pendaftaran' => $statusPendaftaran,
                         'status_event' => $event->mdl_status, // draft, active, closed, archived
                         'banner' => $event->mdl_banner_acara ? url('storage/' . $event->mdl_banner_acara) : null,
                         'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
@@ -261,7 +341,7 @@ class EventController extends Controller
                           ->orWhere('mdl_slug', $identifier);
                 })
                 ->first();
-
+                //s
             if (!$event) {
                 return response()->json([
                     'success' => false,
