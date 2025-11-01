@@ -110,6 +110,7 @@ class ModulAcaraController extends Controller
             'mdl_catatan' => 'nullable|string',
             // Admin tidak boleh mengirim/menentukan QR secara manual
             'mdl_kode_qr' => 'prohibited',
+            'mdl_link_wa' => 'nullable|string|max:255',
         ]);
 
         // Handle file uploads
@@ -169,8 +170,8 @@ class ModulAcaraController extends Controller
         }
         $validated = $request->validate([
             'mdl_nama' => 'sometimes|string|max:150',
-            'mdl_kode' => 'sometimes|string|max:30|unique:modul_acara,mdl_kode,'.$id,
-            'mdl_slug' => 'sometimes|string|max:180|unique:modul_acara,mdl_slug,'.$id,
+            'mdl_kode' => 'sometimes|string|max:30|unique:modul_acara,mdl_kode,' . $id,
+            'mdl_slug' => 'sometimes|string|max:180|unique:modul_acara,mdl_slug,' . $id,
             'mdl_deskripsi' => 'sometimes|string',
             'mdl_tipe' => 'sometimes|in:online,offline,hybrid',
             'mdl_kategori' => 'sometimes|in:public,private,invite-only',
@@ -193,6 +194,7 @@ class ModulAcaraController extends Controller
             'mdl_catatan' => 'nullable|string',
             // QR tidak boleh diubah
             'mdl_kode_qr' => 'prohibited',
+            'mdl_link_wa' => 'nullable|string',
         ]);
 
         // Handle file uploads - hapus file lama jika ada file baru
@@ -311,10 +313,8 @@ class ModulAcaraController extends Controller
     protected function generateUniqueQrCode(): string
     {
         do {
-            $candidate = 'EVTQR-'.Str::upper(Str::random(8)).'-'.time();
+            $candidate = 'EVTQR-' . Str::upper(Str::random(8)) . '-' . time();
         } while (ModulAcara::where('mdl_kode_qr', $candidate)->exists());
         return $candidate;
     }
 }
-
-

@@ -253,10 +253,10 @@ class PendaftaranAcaraController extends Controller
         $pendaftaran = PendaftaranAcara::query()
             ->with([
                 // relasi event (acara)
+                'presensi',
                 'modulAcara:id,mdl_kode,mdl_slug,mdl_nama,mdl_kategori,mdl_tipe,mdl_lokasi,mdl_acara_mulai,mdl_acara_selesai,mdl_status,mdl_banner_acara,mdl_kode_qr,mdl_file_acara,mdl_file_rundown,mdl_template_sertifikat',
                 // relasi profil user (ringan)
-                // 'user:id,name,username,telp',
-
+                'user:id,name,telp',
             ])
             ->where('user_id', $user->id)
             ->orderByDesc('waktu_daftar')
@@ -266,20 +266,19 @@ class PendaftaranAcaraController extends Controller
         $pendaftaran->getCollection()->transform(function ($item) {
             if ($item->modulAcara) {
                 // Tambahkan URL lengkap untuk media files
-                $item->modulAcara->mdl_banner_acara_url = StorageHelper::getStorageUrl($item->modulAcara->mdl_banner_acara);
-                $item->modulAcara->mdl_file_acara_url = StorageHelper::getStorageUrl($item->modulAcara->mdl_file_acara);
-                $item->modulAcara->mdl_file_rundown_url = StorageHelper::getStorageUrl($item->modulAcara->mdl_file_rundown);
-
-                // Hide internal path fields dari response
-                $item->modulAcara->makeHidden(['mdl_banner_acara', 'mdl_file_acara', 'mdl_file_rundown', 'mdl_template_sertifikat']);
+                $item->modulAcara->mdl_banner_acara_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_banner_acara);
+                $item->modulAcara->mdl_file_acara_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_file_acara);
+                $item->modulAcara->mdl_file_rundown_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_file_rundown);
+                $item->modulAcara->mdl_template_sertifikat_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_template_sertifikat);
             }
             return $item;
         });
 
+
         // Response rapi (tetap simpel)
         return response()->json([
             'success' => true,
-            'message' => 'Daftar Event Anda.',
+            'message' => 'Daftar Acara Anda.',
             'data' => $pendaftaran,
         ]);
     }
@@ -301,8 +300,10 @@ class PendaftaranAcaraController extends Controller
         $event = PendaftaranAcara::query()
             ->with([
                 // relasi event (acara)
+                'presensi',
                 'modulAcara',
                 // relasi profil user (ringan)
+                'user:id,name,telp',
 
 
             ])
@@ -323,6 +324,7 @@ class PendaftaranAcaraController extends Controller
             $event->modulAcara->mdl_banner_acara_url = StorageHelper::getStorageUrl($event->modulAcara->mdl_banner_acara);
             $event->modulAcara->mdl_file_acara_url = StorageHelper::getStorageUrl($event->modulAcara->mdl_file_acara);
             $event->modulAcara->mdl_file_rundown_url = StorageHelper::getStorageUrl($event->modulAcara->mdl_file_rundown);
+            $event->modulAcara->mdl_template_sertifikat_url  = StorageHelper::getStorageUrl($event->modulAcara->mdl_template_sertifikat);
 
             // Hide internal path fields dari response
             $event->modulAcara->makeHidden(['mdl_banner_acara', 'mdl_file_acara', 'mdl_file_rundown', 'mdl_template_sertifikat']);
@@ -331,7 +333,7 @@ class PendaftaranAcaraController extends Controller
         // Response rapi (tetap simpel)
         return response()->json([
             'success' => true,
-            'message' => 'Detail Event Anda.',
+            'message' => 'Detail Acara Anda.',
             'data' => $event,
         ]);
     }
