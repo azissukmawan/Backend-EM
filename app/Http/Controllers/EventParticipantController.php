@@ -18,7 +18,7 @@ class EventParticipantController extends Controller
         
         $query = PendaftaranAcara::with([
             'user',
-            'event',
+            'modulAcara',
             'presensi' => function ($q) use ($eventId) {
                 $q->where('modul_acara_id', $eventId);
             }

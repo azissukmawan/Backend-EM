@@ -13,6 +13,8 @@ use App\Http\Controllers\EventStatisticController;
 
 use App\Http\Controllers\DoorprizeController;
 use App\Http\Controllers\PendaftaranAcaraController;
+use App\Http\Controllers\PresensiController;
+use App\Http\Controllers\ToggleQRController;
 
 
 // Public routes - Landing Page Events
@@ -100,8 +102,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/events/{eventId}/draw-winner', [DoorprizeController::class, 'drawWinner']);
     Route::get('/admin/events/{eventId}/winners', [DoorprizeController::class, 'getWinners']);
 
-    Route::get('/events', [ModulAcaraController::class, 'index']);
-
     // Admin routes for managing participant
     Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
     Route::get('/admin/events/{eventId}/stats', [EventStatisticController::class, 'show']);
@@ -110,4 +110,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/events/{eventId}/daftar', [PendaftaranAcaraController::class, 'daftar']);
     Route::post('/events/{eventId}/daftar-invite', [PendaftaranAcaraController::class, 'daftarInvite']);
     Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
+    Route::get('/me/pendaftaran', [PendaftaranAcaraController::class, 'listSaya']);
+    Route::get('events/{eventId}/me', [PendaftaranAcaraController::class, 'detailEventSaya']);
+});
+
+// Presensi Acara routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/presensi', [PresensiController::class, 'store']);               // peserta absen
+    Route::get('/acara/{id}/presensi', [PresensiController::class, 'index']);     // daftar presensi (panitia)
+    Route::get('/acara/{id}/presensi/me', [PresensiController::class, 'me']);     // status user sendiri
+    Route::get('/acara/{id}/qr-code', [PresensiController::class, 'showQr']);     // tampilkan QR event
+    Route::post('/acara/{id}/presensi/reset', [PresensiController::class, 'reset']); // reset presensi
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/admin/event/{id}/presensi/toggle', [ToggleQRController::class, 'toggle']);
 });

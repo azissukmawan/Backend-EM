@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ModulAcara;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Helpers\StorageHelper;
 
 class EventController extends Controller
 {
@@ -18,7 +19,7 @@ class EventController extends Controller
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('mdl_kategori', ['public', 'private'])
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->where('mdl_status', 'active')
                 ->where('mdl_acara_mulai', '<=', $now)
                 ->where(function ($query) use ($now) {
@@ -39,7 +40,7 @@ class EventController extends Controller
                             ? Carbon::parse($event->mdl_acara_selesai)->format('d M Y, H:i')
                             : null,
                         'status_acara' => 'Sedang Berlangsung',
-                        'banner' => $event->mdl_banner_acara ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara : null,
+                        'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                         'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
                             ? substr($event->mdl_deskripsi, 0, 150) . '...'
                             : $event->mdl_deskripsi,
@@ -74,7 +75,7 @@ class EventController extends Controller
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('mdl_kategori', ['public', 'private'])
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->where('mdl_status', 'active')
                 ->where('mdl_acara_mulai', '>', $now)
                 ->orderBy('mdl_acara_mulai', 'asc')
@@ -93,7 +94,7 @@ class EventController extends Controller
                         'tanggal_mulai_raw' => $event->mdl_acara_mulai,
                         'hari_lagi' => $daysUntil . ' hari lagi',
                         'status_acara' => 'Akan Datang',
-                        'banner' => $event->mdl_banner_acara ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara : null,
+                        'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                         'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
                             ? substr($event->mdl_deskripsi, 0, 150) . '...'
                             : $event->mdl_deskripsi,
@@ -128,7 +129,7 @@ class EventController extends Controller
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('mdl_kategori', ['public', 'private'])
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->where(function ($query) use ($now) {
                     // Event yang punya tanggal selesai dan sudah lewat
                     $query->where('mdl_acara_selesai', '<', $now)
@@ -159,7 +160,7 @@ class EventController extends Controller
                             : null,
                         'hari_lalu' => $daysAgo . ' hari yang lalu',
                         'status_acara' => 'Selesai',
-                        'banner' => $event->mdl_banner_acara ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara : null,
+                        'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                     ];
                 });
 
@@ -189,7 +190,7 @@ class EventController extends Controller
     public function all()
     {
         try {
-            $events = ModulAcara::where('mdl_kategori', ['public', 'private'])
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
                 ->map(function ($event) {
@@ -218,10 +219,12 @@ class EventController extends Controller
                         'tanggal_mulai_raw' => $event->mdl_acara_mulai,
                         'status_acara' => $statusAcara,
                         'status_event' => $event->mdl_status, // draft, active, closed, archived
-                        'banner' => $event->mdl_banner_acara ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara : null,
+                        'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                         'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
                             ? substr($event->mdl_deskripsi, 0, 150) . '...'
                             : $event->mdl_deskripsi,
+                        'mdl_kode' => $event->mdl_kode,
+                        'mdl_presensi_aktif' => $event->mdl_presensi_aktif,
                     ];
                 });
 
@@ -251,7 +254,7 @@ class EventController extends Controller
     {
         try {
             // Cari berdasarkan ID atau slug
-            $event = ModulAcara::where('mdl_kategori', ['public', 'private'])
+            $event = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->where(function ($query) use ($identifier) {
                     $query->where('id', $identifier)
                         ->orWhere('mdl_slug', $identifier);
@@ -287,6 +290,8 @@ class EventController extends Controller
                 'slug' => $event->mdl_slug,
                 'nama' => $event->mdl_nama,
                 'deskripsi' => $event->mdl_deskripsi,
+                'mdl_kode_qr' => $event->mdl_kode_qr,
+                'mdl_presensi_aktif' => $event->mdl_presensi_aktif,
                 'tipe' => ucfirst($event->mdl_tipe),
                 'status_acara' => $statusAcara,
                 'lokasi' => $event->mdl_lokasi,
@@ -316,7 +321,7 @@ class EventController extends Controller
                 'status' => $event->mdl_status,
                 'sertifikat_aktif' => $event->mdl_sertifikat_aktif,
                 'doorprize_aktif' => $event->mdl_doorprize_aktif,
-                'banner' => $event->mdl_banner_acara ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara : null,
+                'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                 'catatan' => $event->mdl_catatan,
                 'created_at' => Carbon::parse($event->created_at)->format('d M Y, H:i'),
             ];

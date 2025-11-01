@@ -6,14 +6,11 @@ use App\Models\ModulAcara;
 use Illuminate\Http\Request;
 use App\Models\DetailPeserta;
 use App\Models\PendaftaranAcara;
+use App\Helpers\StorageHelper;
 
 class PendaftaranAcaraController extends Controller
 {
-    //
-    /**
-     * Peserta mendaftar ke acara tertentu.
-     * Endpoint: POST /api/acara/{modul_acara_id}/daftar
-     */
+
     public function daftar(Request $request, $modul_acara_id)
     {
         $user = auth()->user();
@@ -187,10 +184,7 @@ class PendaftaranAcaraController extends Controller
         ]);
     }
 
-    /**
-     * Peserta membatalkan pendaftaran acara.
-     * Endpoint: DELETE /api/acara/{modul_acara_id}/batal-daftar
-     */
+
     public function batalDaftar(Request $request, $modul_acara_id)
     {
         $user = auth()->user();
@@ -239,6 +233,108 @@ class PendaftaranAcaraController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pendaftaran Anda telah dibatalkan.',
+        ]);
+    }
+
+    public function listSaya(Request $request)
+    {
+        $user = auth()->user();
+
+        if ($user->role !== 'peserta') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya peserta yang dapat melihat daftar pendaftarannya.',
+            ], 403);
+        }
+
+        // Query param opsional: ?per_page=10
+        $perPage = (int) $request->query('per_page', 10);
+
+        $pendaftaran = PendaftaranAcara::query()
+            ->with([
+                // relasi event (acara)
+                'presensi',
+                'modulAcara:id,mdl_kode,mdl_slug,mdl_nama,mdl_kategori,mdl_tipe,mdl_lokasi,mdl_acara_mulai,mdl_acara_selesai,mdl_status,mdl_banner_acara,mdl_kode_qr,mdl_file_acara,mdl_file_rundown,mdl_template_sertifikat',
+                // relasi profil user (ringan)
+                'user:id,name,telp',
+            ])
+            ->where('user_id', $user->id)
+            ->orderByDesc('waktu_daftar')
+            ->paginate($perPage);
+
+        // Transform data untuk menambahkan URL lengkap pada media
+        $pendaftaran->getCollection()->transform(function ($item) {
+            if ($item->modulAcara) {
+                // Tambahkan URL lengkap untuk media files
+                $item->modulAcara->mdl_banner_acara_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_banner_acara);
+                $item->modulAcara->mdl_file_acara_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_file_acara);
+                $item->modulAcara->mdl_file_rundown_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_file_rundown);
+                $item->modulAcara->mdl_template_sertifikat_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_template_sertifikat);
+            }
+            return $item;
+        });
+
+
+        // Response rapi (tetap simpel)
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar Acara Anda.',
+            'data' => $pendaftaran,
+        ]);
+    }
+
+    public function detailEventSaya(Request $request, $eventid)
+    {
+        $user = auth()->user();
+
+        if ($user->role !== 'peserta') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya peserta yang dapat melihat daftar pendaftarannya.',
+            ], 403);
+        }
+
+        // Query param opsional: ?per_page=10
+        $perPage = (int) $request->query('per_page', 10);
+
+        $event = PendaftaranAcara::query()
+            ->with([
+                // relasi event (acara)
+                'presensi',
+                'modulAcara',
+                // relasi profil user (ringan)
+                'user:id,name,telp',
+
+
+            ])
+            ->where('user_id', $user->id)
+            ->where('modul_acara_id', $eventid)
+            ->first();
+
+        if (!$event) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Detail Acara tidak ditemukan.',
+            ], 404);
+        }
+
+        // Transform data untuk menambahkan URL lengkap pada media
+        if ($event->modulAcara) {
+            // Tambahkan URL lengkap untuk media files
+            $event->modulAcara->mdl_banner_acara_url = StorageHelper::getStorageUrl($event->modulAcara->mdl_banner_acara);
+            $event->modulAcara->mdl_file_acara_url = StorageHelper::getStorageUrl($event->modulAcara->mdl_file_acara);
+            $event->modulAcara->mdl_file_rundown_url = StorageHelper::getStorageUrl($event->modulAcara->mdl_file_rundown);
+            $event->modulAcara->mdl_template_sertifikat_url  = StorageHelper::getStorageUrl($event->modulAcara->mdl_template_sertifikat);
+
+            // Hide internal path fields dari response
+            $event->modulAcara->makeHidden(['mdl_banner_acara', 'mdl_file_acara', 'mdl_file_rundown', 'mdl_template_sertifikat']);
+        }
+
+        // Response rapi (tetap simpel)
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail Acara Anda.',
+            'data' => $event,
         ]);
     }
 }

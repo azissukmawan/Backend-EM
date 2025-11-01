@@ -89,7 +89,7 @@ class ModulAcara extends Model
     public function pesertaTerdaftar(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'pendaftaran_acara', 'modul_acara_id', 'user_id')
-            ->withPivot(['metode_daftar', 'waktu_daftar'])
+            ->withPivot(['metode_daftar', 'waktu_daftar', 'has_doorprize', 'no_sertifikat'])
             ->withTimestamps();
     }
     /** Peserta yang diundang (invite-only) */

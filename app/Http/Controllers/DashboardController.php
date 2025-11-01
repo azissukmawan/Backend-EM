@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ModulAcara;
+use App\Models\PendaftaranAcara;
+use App\Helpers\StorageHelper;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -54,16 +56,58 @@ class DashboardController extends Controller
             $perPage = $request->get('per_page', 6);
             $events = $query->paginate($perPage);
 
-            // Transform data untuk response
-            $transformedData = collect($events->items())->map(function ($event) {
-                return $this->transformEventData($event);
+            // Get registered event IDs for current user
+            $registeredEventIds = [];
+            if ($user) {
+                $registeredEventIds = PendaftaranAcara::where('user_id', $user->id)
+                    ->whereIn('modul_acara_id', collect($events->items())->pluck('id'))
+                    ->pluck('modul_acara_id')
+                    ->toArray();
+            }
+
+            // Transform data untuk menambahkan URL media
+            $eventsWithMedia = collect($events->items())->map(function ($event) use ($registeredEventIds) {
+                $eventArray = $event->toArray();
+
+                // Hilangkan field yang tidak perlu
+                unset($eventArray['mdl_banner_acara']);
+                unset($eventArray['mdl_file_acara']);
+                unset($eventArray['mdl_file_rundown']);
+                unset($eventArray['mdl_template_sertifikat']);
+
+                // Check if user is registered
+                $isRegistered = in_array($event->id, $registeredEventIds);
+
+                // Hanya tampilkan URL yang tidak kosong
+                $mediaUrls = [];
+
+                $bannerUrl = StorageHelper::getStorageUrl($event->mdl_banner_acara);
+                if (!empty($bannerUrl)) {
+                    $mediaUrls['banner'] = $bannerUrl;
+                }
+
+                // File acara dan rundown hanya untuk user yang sudah registrasi
+                if ($isRegistered) {
+                    $fileAcaraUrl = StorageHelper::getStorageUrl($event->mdl_file_acara);
+                    if (!empty($fileAcaraUrl)) {
+                        $mediaUrls['file_acara'] = $fileAcaraUrl;
+                    }
+
+                    $fileRundownUrl = StorageHelper::getStorageUrl($event->mdl_file_rundown);
+                    if (!empty($fileRundownUrl)) {
+                        $mediaUrls['file_rundown'] = $fileRundownUrl;
+                    }
+                }
+
+                $eventArray['media_urls'] = $mediaUrls;
+                return $eventArray;
             });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Dashboard events retrieved successfully',
                 'data' => [
-                    'events' => $transformedData,
+                    'events' => $eventsWithMedia,
                     'pagination' => [
                         'total' => $events->total(),
                         'per_page' => $events->perPage(),
@@ -117,12 +161,58 @@ class DashboardController extends Controller
             // Load relationships
             $event->load(['user', 'creator']);
 
-            $eventDetail = $this->transformEventDetailData($event);
+            // Cek apakah user sudah terdaftar
+            $pendaftaran = null;
+            $isRegistered = false;
+            if ($user) {
+                $pendaftaran = PendaftaranAcara::where('modul_acara_id', $event->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if ($pendaftaran) {
+                    $isRegistered = true;
+                }
+            }
+
+            // Tambahkan URL media yang bisa diakses publik
+            $eventArray = $event->toArray();
+
+            // Hilangkan field yang tidak perlu
+            unset($eventArray['mdl_banner_acara']);
+            unset($eventArray['mdl_file_acara']);
+            unset($eventArray['mdl_file_rundown']);
+            unset($eventArray['mdl_template_sertifikat']);
+
+            $mediaUrls = [];
+
+            // Banner selalu ditampilkan jika ada
+            $bannerUrl = StorageHelper::getStorageUrl($event->mdl_banner_acara);
+            if (!empty($bannerUrl)) {
+                $mediaUrls['banner'] = $bannerUrl;
+            }
+
+            // File acara dan rundown hanya untuk user yang sudah registrasi
+            if ($isRegistered) {
+                $fileAcaraUrl = StorageHelper::getStorageUrl($event->mdl_file_acara);
+                if (!empty($fileAcaraUrl)) {
+                    $mediaUrls['file_acara'] = $fileAcaraUrl;
+                }
+
+                $fileRundownUrl = StorageHelper::getStorageUrl($event->mdl_file_rundown);
+                if (!empty($fileRundownUrl)) {
+                    $mediaUrls['file_rundown'] = $fileRundownUrl;
+                }
+            }
+
+            $eventArray['media_urls'] = $mediaUrls;
 
             return response()->json([
                 'success' => true,
                 'message' => 'Event detail retrieved successfully',
-                'data' => $eventDetail
+                'data' => [
+                    'event' => $eventArray,
+                    'pendaftaran' => $pendaftaran
+                ]
             ], 200);
 
         } catch (\Exception $e) {
@@ -132,165 +222,5 @@ class DashboardController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-    }
-
-    /**
-     * Transform event data for list view
-     *
-     * @param ModulAcara $event
-     * @return array
-     */
-    private function transformEventData($event)
-    {
-        $now = Carbon::now();
-        $eventStart = Carbon::parse($event->mdl_acara_mulai);
-        $eventEnd = $event->mdl_acara_selesai ? Carbon::parse($event->mdl_acara_selesai) : null;
-        $registrationEnd = Carbon::parse($event->mdl_pendaftaran_selesai);
-
-        $eventTimeStatus = 'upcoming';
-        if ($now->greaterThan($eventStart)) {
-            if ($eventEnd && $now->lessThan($eventEnd)) {
-                $eventTimeStatus = 'ongoing';
-            } elseif ($eventEnd && $now->greaterThan($eventEnd)) {
-                $eventTimeStatus = 'completed';
-            }
-        }
-
-        // Registration status
-        $registrationStatus = $now->lessThan($registrationEnd) ? 'open' : 'closed';
-
-        return [
-            'id' => $event->id,
-            'kode' => $event->mdl_kode,
-            'slug' => $event->mdl_slug,
-            'nama' => $event->mdl_nama,
-            'deskripsi' => substr($event->mdl_deskripsi, 0, 150) . (strlen($event->mdl_deskripsi) > 150 ? '...' : ''),
-            'tipe' => $event->mdl_tipe,
-            'status' => $event->mdl_status,
-            'kategori' => $event->mdl_kategori,
-            'lokasi' => $event->mdl_lokasi,
-            'tanggal_mulai' => Carbon::parse($event->mdl_acara_mulai)->format('d F Y, H:i') . ' WIB',
-            'tanggal_selesai' => $event->mdl_acara_selesai
-                ? Carbon::parse($event->mdl_acara_selesai)->format('d F Y, H:i') . ' WIB'
-                : null,
-            'pendaftaran_selesai' => Carbon::parse($event->mdl_pendaftaran_selesai)->format('d F Y, H:i') . ' WIB',
-            'banner' => $event->mdl_banner_acara
-                ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
-                : null,
-            'event_time_status' => $eventTimeStatus,
-            'registration_status' => $registrationStatus,
-        ];
-    }
-
-    /**
-     * Transform event data for detail view
-     *
-     * @param ModulAcara $event
-     * @return array
-     */
-    private function transformEventDetailData($event)
-    {
-        $now = Carbon::now();
-        $eventStart = Carbon::parse($event->mdl_acara_mulai);
-        $eventEnd = $event->mdl_acara_selesai ? Carbon::parse($event->mdl_acara_selesai) : null;
-        $registrationStart = Carbon::parse($event->mdl_pendaftaran_mulai);
-        $registrationEnd = Carbon::parse($event->mdl_pendaftaran_selesai);
-
-        // Determine event time status
-        $eventTimeStatus = 'upcoming';
-        if ($now->greaterThan($eventStart)) {
-            if ($eventEnd && $now->lessThan($eventEnd)) {
-                $eventTimeStatus = 'ongoing';
-            } elseif ($eventEnd && $now->greaterThan($eventEnd)) {
-                $eventTimeStatus = 'completed';
-            }
-        }
-
-        // Registration status
-        $registrationStatus = 'closed';
-        if ($now->greaterThanOrEqualTo($registrationStart) && $now->lessThan($registrationEnd)) {
-            $registrationStatus = 'open';
-        } elseif ($now->lessThan($registrationStart)) {
-            $registrationStatus = 'upcoming';
-        }
-
-        return [
-            'id' => $event->id,
-            'kode' => $event->mdl_kode,
-            'slug' => $event->mdl_slug,
-            'nama' => $event->mdl_nama,
-            'deskripsi' => $event->mdl_deskripsi,
-            'tipe' => $event->mdl_tipe,
-            'status' => $event->mdl_status,
-            'kategori' => $event->mdl_kategori,
-
-            // Informasi Lokasi
-            'lokasi' => [
-                'alamat' => $event->mdl_lokasi,
-                'latitude' => $event->mdl_latitude,
-                'longitude' => $event->mdl_longitude,
-                'radius' => $event->mdl_radius,
-            ],
-
-            // Informasi Pendaftaran
-            'pendaftaran' => [
-                'mulai' => Carbon::parse($event->mdl_pendaftaran_mulai)->format('d F Y, H:i') . ' WIB',
-                'selesai' => Carbon::parse($event->mdl_pendaftaran_selesai)->format('d F Y, H:i') . ' WIB',
-                'maks_peserta_eksternal' => $event->mdl_maks_peserta_eksternal,
-                'status' => $registrationStatus,
-            ],
-
-            // Informasi Acara
-            'acara' => [
-                'tanggal_mulai' => Carbon::parse($event->mdl_acara_mulai)->format('d F Y'),
-                'tanggal_selesai' => $event->mdl_acara_selesai
-                    ? Carbon::parse($event->mdl_acara_selesai)->format('d F Y')
-                    : null,
-                'jam_mulai' => Carbon::parse($event->mdl_acara_mulai)->format('H:i'),
-                'jam_selesai' => $event->mdl_acara_selesai
-                    ? Carbon::parse($event->mdl_acara_selesai)->format('H:i')
-                    : null,
-                'durasi' => $eventEnd
-                    ? $eventStart->diffInMinutes($eventEnd) . ' menit'
-                    : null,
-            ],
-
-            // Fitur
-            'fitur' => [
-                'sertifikat_aktif' => $event->mdl_sertifikat_aktif,
-                'doorprize_aktif' => $event->mdl_doorprize_aktif,
-            ],
-
-            // Files/Media
-            'media' => [
-                'banner' => $event->mdl_banner_acara
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_banner_acara
-                    : null,
-                'file_acara' => $event->mdl_file_acara
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_acara
-                    : null,
-                'file_rundown' => $event->mdl_file_rundown
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_file_rundown
-                    : null,
-                'template_sertifikat' => $event->mdl_template_sertifikat
-                    ? env('AWS_URL') . '/' . env('AWS_BUCKET') . '/' . $event->mdl_template_sertifikat
-                    : null,
-            ],
-
-            // Additional Info
-            'catatan' => $event->mdl_catatan,
-            'event_time_status' => $eventTimeStatus,
-
-            // Organizer Info (if loaded)
-            'organizer' => $event->user ? [
-                'id' => $event->user->id,
-                'name' => $event->user->name,
-                'email' => $event->user->email,
-            ] : null,
-
-            // Timestamps
-            'created_at' => Carbon::parse($event->created_at)->format('d F Y, H:i') . ' WIB',
-            'updated_at' => Carbon::parse($event->updated_at)->format('d F Y, H:i') . ' WIB',
-        ];
     }
 }
