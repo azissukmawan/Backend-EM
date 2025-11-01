@@ -43,6 +43,7 @@ class ModulAcara extends Model
         'mdl_doorprize_aktif',
         'mdl_banner_acara',
         'mdl_catatan',
+        'mdl_link_wa',
         'created_by',
         'updated_by',
     ];
