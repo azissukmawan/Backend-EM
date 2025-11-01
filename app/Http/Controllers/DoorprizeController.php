@@ -34,11 +34,16 @@ class DoorprizeController extends Controller
             ], 400);
         }
 
-        // Get all registered participants who haven't won doorprize yet
+        // Get all registered participants who haven't won doorprize yet AND have checked in with status 'Hadir'
         $participants = DB::table('pendaftaran_acara')
-            ->where('modul_acara_id', $eventId)
-            ->where('has_doorprize', false)
-            ->pluck('user_id')
+            ->join('presensi_acara', function($join) use ($eventId) {
+                $join->on('pendaftaran_acara.modul_acara_id', '=', 'presensi_acara.modul_acara_id')
+                     ->on('pendaftaran_acara.user_id', '=', 'presensi_acara.user_id');
+            })
+            ->where('pendaftaran_acara.modul_acara_id', $eventId)
+            ->where('pendaftaran_acara.has_doorprize', false)
+            ->where('presensi_acara.status', 'Hadir')
+            ->pluck('pendaftaran_acara.user_id')
             ->toArray();
 
         if (empty($participants)) {
