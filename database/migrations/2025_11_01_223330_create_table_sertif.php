@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('sertifikats', function (Blueprint $table) {
             $table->id();
             $table->string('name_peserta');
-            $table->string('kode_acara');
-            $table->timestamps();
+            $table->string('kode_sertif');
+            $table->string('tannggal_sertif');
         });
     }
 
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('sertifikats');
     }
 };

@@ -8,6 +8,7 @@ class Sertifikat extends Model
 {
     protected $fillable = [
         'name_peserta',
-        'kode_acara',
+        'kode_sertif',
+        'tanggal_sertif',
     ];
 }

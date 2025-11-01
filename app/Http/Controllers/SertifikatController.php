@@ -28,19 +28,16 @@ class SertifikatController extends Controller
             ], 403);
         }
 
-        $kodeAcara = $presensi->modulAcara->mdl_kode;
-
-        if (!$kodeAcara) {
-            return response()->json([
-                'message' => 'Kode acara tidak ditemukan.'
-            ], 404);
-        }
+        $kodeSertif = $presensi->pendaftaranAcara?->no_sertifikat;
+        $tanggalAcara = $presensi->modulAcara->mdl_acara_selesai;
+        
 
         $sertifikat = Sertifikat::create([
             'name_peserta' => $user->name,
-            'kode_acara' => $kodeAcara,
+            'kode_sertif' => $kodeSertif,
+            'tanggal_sertif' => $tanggalAcara,
         ]);
 
-        return response()->json($sertifikat, 201);
+        return response()->json($sertifikat, 200);
     }
 }

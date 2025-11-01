@@ -12,7 +12,7 @@ class PresensiAcara extends Model
     protected $table = 'presensi_acara';
     protected $guarded = [];
 
-    public function modulAcara()
+    public function event()
     {
         return $this->belongsTo(ModulAcara::class, 'modul_acara_id');
     }
@@ -21,4 +21,10 @@ class PresensiAcara extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function pendaftaranAcara()
+    {
+        return $this->belongsTo(\App\Models\PendaftaranAcara::class, 'pendaftaran_acara_id');
+    }
+
 }
