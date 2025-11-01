@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('modul_acara', function (Blueprint $table) {
-            $table->boolean('is_public')->default(true)->after('mdl_status');
+        Schema::create('sertifikats', function (Blueprint $table) {
+            $table->id();
+            $table->string('name_peserta');
+            $table->string('kode_acara');
+            $table->timestamps();
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('modul_acara', function (Blueprint $table) {
-            $table->dropColumn('is_public');
-        });
+        //
     }
 };

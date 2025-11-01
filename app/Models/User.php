@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -102,5 +103,24 @@ class User extends Authenticatable
                 'locked_until' => now()->addMinutes(15),
             ]);
         }
+    }
+
+    public function acaraTerdaftar(): BelongsToMany
+    {
+        return $this->belongsToMany(ModulAcara::class, 'pendaftaran_acara', 'user_id', 'modul_acara_id')
+            ->withPivot(['metode_daftar', 'waktu_daftar', 'has_doorprize', 'no_sertifikat'])
+            ->withTimestamps();
+    }
+
+    /** Acara yang user terdaftar via undangan (invite-only) */
+    public function acaraUndangan(): BelongsToMany
+    {
+        return $this->acaraTerdaftar()->wherePivot('metode_daftar', 'invite',);
+    }
+
+    /** Acara yang user daftar sendiri (public) */
+    public function acaraDaftarSendiri(): BelongsToMany
+    {
+        return $this->acaraTerdaftar()->wherePivot('metode_daftar', 'self');
     }
 }

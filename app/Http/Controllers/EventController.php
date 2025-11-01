@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ModulAcara;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Helpers\StorageHelper;
 
 class EventController extends Controller
 {
@@ -18,12 +19,12 @@ class EventController extends Controller
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('mdl_kategori', 'public')
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->where('mdl_status', 'active')
                 ->where('mdl_acara_mulai', '<=', $now)
-                ->where(function($query) use ($now) {
+                ->where(function ($query) use ($now) {
                     $query->whereNull('mdl_acara_selesai')
-                          ->orWhere('mdl_acara_selesai', '>=', $now);
+                        ->orWhere('mdl_acara_selesai', '>=', $now);
                 })
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
@@ -75,7 +76,6 @@ class EventController extends Controller
                     'description' => 'Event yang sedang aktif/berlangsung saat ini'
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -95,7 +95,7 @@ class EventController extends Controller
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('mdl_kategori', 'public')
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->where('mdl_status', 'active')
                 ->where('mdl_acara_mulai', '>', $now)
                 ->orderBy('mdl_acara_mulai', 'asc')
@@ -150,7 +150,6 @@ class EventController extends Controller
                     'description' => 'Event yang akan datang (belum dimulai)'
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -170,15 +169,15 @@ class EventController extends Controller
         try {
             $now = Carbon::now();
 
-            $events = ModulAcara::where('mdl_kategori', 'public')
-                ->where(function($query) use ($now) {
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
+                ->where(function ($query) use ($now) {
                     // Event yang punya tanggal selesai dan sudah lewat
                     $query->where('mdl_acara_selesai', '<', $now)
-                          // ATAU event yang mulai > 1 hari lalu tapi tidak ada tanggal selesai
-                          ->orWhere(function($q) use ($now) {
-                              $q->whereNull('mdl_acara_selesai')
+                        // ATAU event yang mulai > 1 hari lalu tapi tidak ada tanggal selesai
+                        ->orWhere(function ($q) use ($now) {
+                            $q->whereNull('mdl_acara_selesai')
                                 ->where('mdl_acara_mulai', '<', $now->copy()->subDay());
-                          });
+                        });
                 })
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
@@ -234,7 +233,6 @@ class EventController extends Controller
                     'description' => 'Event yang sudah selesai'
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -252,7 +250,7 @@ class EventController extends Controller
     public function all()
     {
         try {
-            $events = ModulAcara::where('mdl_kategori', 'public')
+            $events = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
                 ->map(function ($event) {
@@ -301,10 +299,12 @@ class EventController extends Controller
                         'status_acara' => $statusAcara,
                         'status_pendaftaran' => $statusPendaftaran,
                         'status_event' => $event->mdl_status, // draft, active, closed, archived
-                        'banner' => $event->mdl_banner_acara ? url('storage/' . $event->mdl_banner_acara) : null,
+                        'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                         'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
                             ? substr($event->mdl_deskripsi, 0, 150) . '...'
                             : $event->mdl_deskripsi,
+                        'mdl_kode' => $event->mdl_kode,
+                        'mdl_presensi_aktif' => $event->mdl_presensi_aktif,
                     ];
                 });
 
@@ -317,7 +317,6 @@ class EventController extends Controller
                     'description' => 'Semua event public (tanpa filter status)'
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -335,10 +334,10 @@ class EventController extends Controller
     {
         try {
             // Cari berdasarkan ID atau slug
-            $event = ModulAcara::where('mdl_kategori', 'public')
-                ->where(function($query) use ($identifier) {
+            $event = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
+                ->where(function ($query) use ($identifier) {
                     $query->where('id', $identifier)
-                          ->orWhere('mdl_slug', $identifier);
+                        ->orWhere('mdl_slug', $identifier);
                 })
                 ->first();
                 //s
@@ -371,6 +370,8 @@ class EventController extends Controller
                 'slug' => $event->mdl_slug,
                 'nama' => $event->mdl_nama,
                 'deskripsi' => $event->mdl_deskripsi,
+                'mdl_kode_qr' => $event->mdl_kode_qr,
+                'mdl_presensi_aktif' => $event->mdl_presensi_aktif,
                 'tipe' => ucfirst($event->mdl_tipe),
                 'status_acara' => $statusAcara,
                 'lokasi' => $event->mdl_lokasi,
@@ -400,7 +401,7 @@ class EventController extends Controller
                 'status' => $event->mdl_status,
                 'sertifikat_aktif' => $event->mdl_sertifikat_aktif,
                 'doorprize_aktif' => $event->mdl_doorprize_aktif,
-                'banner' => $event->mdl_banner_acara ? url('storage/' . $event->mdl_banner_acara) : null,
+                'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                 'catatan' => $event->mdl_catatan,
                 'created_at' => Carbon::parse($event->created_at)->format('d M Y, H:i'),
             ];
@@ -412,7 +413,6 @@ class EventController extends Controller
                     'event' => $eventDetail
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

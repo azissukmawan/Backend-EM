@@ -323,6 +323,7 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'telp' => $user->telp,
                     'role' => $user->role,
+                    'status_karyawan' => $user->detailPeserta->status_karyawan ?? null,
                     'email_verified_at' => $user->email_verified_at,
                 ],
                 'access_token' => $token,
@@ -397,7 +398,7 @@ class AuthController extends Controller
         ]);
 
         // Buat reset link (ganti dengan URL frontend kamu)
-        $resetLink = env('FRONTEND_URL', 'http://localhost:3000') . '/reset-password?token=' . $token . '&email=' . urlencode($request->email);
+        $resetLink = env('FRONTEND_URL', 'https://airnav-event.vercel.app') . '/reset-password?token=' . $token . '&email=' . urlencode($request->email);
 
         // Kirim email
         try {
