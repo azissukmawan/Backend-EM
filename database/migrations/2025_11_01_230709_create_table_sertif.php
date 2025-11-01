@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name_peserta');
             $table->string('kode_sertif');
-            $table->string('tannggal_sertif');
+            $table->string('tanggal_sertif');
         });
     }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sertifikat;
 use App\Models\PresensiAcara;
 use Illuminate\Http\Request;
+use App\Helpers\StorageHelper;
 
 class SertifikatController extends Controller
 {
@@ -16,7 +17,7 @@ class SertifikatController extends Controller
 
         $user = $request->user();
 
-        $presensi = PresensiAcara::with('modulAcara')
+        $presensi = PresensiAcara::with('event')
             ->where('modul_acara_id', $request->id_acara)
             ->where('user_id', $user->id)
             ->where('status', 'Hadir')
@@ -29,13 +30,15 @@ class SertifikatController extends Controller
         }
 
         $kodeSertif = $presensi->pendaftaranAcara?->no_sertifikat;
-        $tanggalAcara = $presensi->modulAcara->mdl_acara_selesai;
-        
+        $tanggalAcara = $presensi->event->mdl_acara_selesai;
+        $templateSertifikat = StorageHelper::getStorageUrl($presensi->event->mdl_template_sertifikat);
 
         $sertifikat = Sertifikat::create([
             'name_peserta' => $user->name,
+            'nama_acara' => $presensi->event->mdl_nama,
             'kode_sertif' => $kodeSertif,
             'tanggal_sertif' => $tanggalAcara,
+            'base_template_sertifikat' => $templateSertifikat,
         ]);
 
         return response()->json($sertifikat, 200);
