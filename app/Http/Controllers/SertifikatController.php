@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sertifikat;
 use App\Models\PresensiAcara;
 use Illuminate\Http\Request;
+use App\Helpers\StorageHelper;
 
 class SertifikatController extends Controller
 {
@@ -16,7 +17,7 @@ class SertifikatController extends Controller
 
         $user = $request->user();
 
-        $presensi = PresensiAcara::with('modulAcara')
+        $presensi = PresensiAcara::with(['event', 'pendaftaranAcara'])
             ->where('modul_acara_id', $request->id_acara)
             ->where('user_id', $user->id)
             ->where('status', 'Hadir')
@@ -24,20 +25,27 @@ class SertifikatController extends Controller
 
         if (!$presensi) {
             return response()->json([
+                'status' => false,
                 'message' => 'Peserta belum dinyatakan hadir dalam acara ini.'
             ], 403);
         }
 
-        $kodeSertif = $presensi->pendaftaranAcara?->no_sertifikat;
-        $tanggalAcara = $presensi->modulAcara->mdl_acara_selesai;
-        
+        $event = $presensi->event;
+        $pendaftaran = $presensi->pendaftaranAcara;
+        $kodeSertif = $pendaftaran?->no_sertifikat;
+        $templateSertifikat = StorageHelper::getStorageUrl($event->mdl_template_sertifikat);
 
-        $sertifikat = Sertifikat::create([
-            'name_peserta' => $user->name,
-            'kode_sertif' => $kodeSertif,
-            'tanggal_sertif' => $tanggalAcara,
-        ]);
-
-        return response()->json($sertifikat, 200);
+        return response()->json([
+            'status' => true,
+            'message' => 'Sukses mendapatkan data sertifikat',
+            'data' => [
+                'id_acara' => $event->id,
+                'nama_acara' => $event->mdl_nama,
+                'tanggal_acara' => $event->mdl_acara_selesai,
+                'nama_peserta' => $user->name,
+                'no_sertifikat' => $kodeSertif,
+                'base_template_sertifikat' => $templateSertifikat,
+            ]
+        ], 200);
     }
 }

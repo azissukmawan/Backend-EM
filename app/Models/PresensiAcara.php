@@ -24,7 +24,7 @@ class PresensiAcara extends Model
 
     public function pendaftaranAcara()
     {
-        return $this->belongsTo(\App\Models\PendaftaranAcara::class, 'pendaftaran_acara_id');
+        return $this->belongsTo(PendaftaranAcara::class, 'pendaftaran_acara_id');
     }
 
 }
