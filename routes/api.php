@@ -125,5 +125,5 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/admin/event/{id}/presensi/toggle', [ToggleQRController::class, 'toggle']);
+    Route::put('/admin/event/{id}/presensi/toggle', [ToggleQRController::class, 'toggle']);
 });

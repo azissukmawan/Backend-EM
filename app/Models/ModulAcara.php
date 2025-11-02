@@ -42,6 +42,7 @@ class ModulAcara extends Model
         'mdl_sertifikat_aktif',
         'mdl_doorprize_aktif',
         'mdl_banner_acara',
+        'mdl_presensi_aktif',
         'mdl_catatan',
         'mdl_link_wa',
         'created_by',
