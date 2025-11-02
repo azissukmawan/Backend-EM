@@ -28,43 +28,21 @@ class EventController extends Controller
                 })
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
-                ->map(function ($event) use ($now) {
-                    // Tentukan status pendaftaran
-                    $statusPendaftaran = 'Ditutup';
-                    if ($event->mdl_pendaftaran_mulai && $event->mdl_pendaftaran_selesai) {
-                        $pendaftaranMulai = Carbon::parse($event->mdl_pendaftaran_mulai);
-                        $pendaftaranSelesai = Carbon::parse($event->mdl_pendaftaran_selesai);
-                        
-                        if ($now->lt($pendaftaranMulai)) {
-                            $statusPendaftaran = 'Segera Hadir';
-                        } elseif ($now->between($pendaftaranMulai, $pendaftaranSelesai)) {
-                            $statusPendaftaran = 'Bisa Daftar';
-                        }
-                    }
+                ->map(function ($event) {
+                    $eventArray = $event->toArray();
 
-                    return [
-                        'id' => $event->id,
-                        'slug' => $event->mdl_slug,
-                        'nama' => $event->mdl_nama,
-                        'tipe' => ucfirst($event->mdl_tipe),
-                        'lokasi' => $event->mdl_lokasi,
-                        'tanggal_mulai' => Carbon::parse($event->mdl_acara_mulai)->format('d M Y, H:i'),
-                        'tanggal_selesai' => $event->mdl_acara_selesai
-                            ? Carbon::parse($event->mdl_acara_selesai)->format('d M Y, H:i')
-                            : null,
-                        'pendaftaran_mulai' => $event->mdl_pendaftaran_mulai 
-                            ? Carbon::parse($event->mdl_pendaftaran_mulai)->format('d M Y, H:i')
-                            : null,
-                        'pendaftaran_selesai' => $event->mdl_pendaftaran_selesai
-                            ? Carbon::parse($event->mdl_pendaftaran_selesai)->format('d M Y, H:i')
-                            : null,
-                        'status_acara' => 'Sedang Berlangsung',
-                        'status_pendaftaran' => $statusPendaftaran,
-                        'banner' => $event->mdl_banner_acara ? url('storage/' . $event->mdl_banner_acara) : null,
-                        'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
-                            ? substr($event->mdl_deskripsi, 0, 150) . '...'
-                            : $event->mdl_deskripsi,
+                    // Remove sensitive internal fields
+                    unset($eventArray['mdl_banner_acara']);
+                    unset($eventArray['mdl_file_acara']);
+                    unset($eventArray['mdl_file_rundown']);
+                    unset($eventArray['mdl_template_sertifikat']);
+
+                    // Add media URLs
+                    $eventArray['media_urls'] = [
+                        'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                     ];
+
+                    return $eventArray;
                 });
 
             return response()->json([
@@ -100,45 +78,21 @@ class EventController extends Controller
                 ->where('mdl_acara_mulai', '>', $now)
                 ->orderBy('mdl_acara_mulai', 'asc')
                 ->get()
-                ->map(function ($event) use ($now) {
-                    $startDate = Carbon::parse($event->mdl_acara_mulai);
-                    $daysUntil = $now->diffInDays($startDate);
+                ->map(function ($event) {
+                    $eventArray = $event->toArray();
 
-                    // Tentukan status pendaftaran
-                    $statusPendaftaran = 'Ditutup';
-                    if ($event->mdl_pendaftaran_mulai && $event->mdl_pendaftaran_selesai) {
-                        $pendaftaranMulai = Carbon::parse($event->mdl_pendaftaran_mulai);
-                        $pendaftaranSelesai = Carbon::parse($event->mdl_pendaftaran_selesai);
-                        
-                        if ($now->lt($pendaftaranMulai)) {
-                            $statusPendaftaran = 'Segera Hadir';
-                        } elseif ($now->between($pendaftaranMulai, $pendaftaranSelesai)) {
-                            $statusPendaftaran = 'Bisa Daftar';
-                        }
-                    }
+                    // Remove sensitive internal fields
+                    unset($eventArray['mdl_banner_acara']);
+                    unset($eventArray['mdl_file_acara']);
+                    unset($eventArray['mdl_file_rundown']);
+                    unset($eventArray['mdl_template_sertifikat']);
 
-                    return [
-                        'id' => $event->id,
-                        'slug' => $event->mdl_slug,
-                        'nama' => $event->mdl_nama,
-                        'tipe' => ucfirst($event->mdl_tipe),
-                        'lokasi' => $event->mdl_lokasi,
-                        'tanggal_mulai' => $startDate->format('d M Y, H:i'),
-                        'tanggal_mulai_raw' => $event->mdl_acara_mulai,
-                        'pendaftaran_mulai' => $event->mdl_pendaftaran_mulai 
-                            ? Carbon::parse($event->mdl_pendaftaran_mulai)->format('d M Y, H:i')
-                            : null,
-                        'pendaftaran_selesai' => $event->mdl_pendaftaran_selesai
-                            ? Carbon::parse($event->mdl_pendaftaran_selesai)->format('d M Y, H:i')
-                            : null,
-                        'hari_lagi' => $daysUntil . ' hari lagi',
-                        'status_acara' => 'Akan Datang',
-                        'status_pendaftaran' => $statusPendaftaran,
-                        'banner' => $event->mdl_banner_acara ? url('storage/' . $event->mdl_banner_acara) : null,
-                        'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
-                            ? substr($event->mdl_deskripsi, 0, 150) . '...'
-                            : $event->mdl_deskripsi,
+                    // Add media URLs
+                    $eventArray['media_urls'] = [
+                        'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                     ];
+
+                    return $eventArray;
                 });
 
             return response()->json([
@@ -181,47 +135,21 @@ class EventController extends Controller
                 })
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
-                ->map(function ($event) use ($now) {
-                    $endDate = $event->mdl_acara_selesai
-                        ? Carbon::parse($event->mdl_acara_selesai)
-                        : Carbon::parse($event->mdl_acara_mulai);
+                ->map(function ($event) {
+                    $eventArray = $event->toArray();
 
-                    $daysAgo = $endDate->diffInDays($now);
+                    // Remove sensitive internal fields
+                    unset($eventArray['mdl_banner_acara']);
+                    unset($eventArray['mdl_file_acara']);
+                    unset($eventArray['mdl_file_rundown']);
+                    unset($eventArray['mdl_template_sertifikat']);
 
-                    // Tentukan status pendaftaran
-                    $statusPendaftaran = 'Ditutup';
-                    if ($event->mdl_pendaftaran_mulai && $event->mdl_pendaftaran_selesai) {
-                        $pendaftaranMulai = Carbon::parse($event->mdl_pendaftaran_mulai);
-                        $pendaftaranSelesai = Carbon::parse($event->mdl_pendaftaran_selesai);
-                        
-                        if ($now->lt($pendaftaranMulai)) {
-                            $statusPendaftaran = 'Segera Hadir';
-                        } elseif ($now->between($pendaftaranMulai, $pendaftaranSelesai)) {
-                            $statusPendaftaran = 'Bisa Daftar';
-                        }
-                    }
-
-                    return [
-                        'id' => $event->id,
-                        'slug' => $event->mdl_slug,
-                        'nama' => $event->mdl_nama,
-                        'tipe' => ucfirst($event->mdl_tipe),
-                        'lokasi' => $event->mdl_lokasi,
-                        'tanggal_mulai' => Carbon::parse($event->mdl_acara_mulai)->format('d M Y, H:i'),
-                        'tanggal_selesai' => $event->mdl_acara_selesai
-                            ? Carbon::parse($event->mdl_acara_selesai)->format('d M Y, H:i')
-                            : null,
-                        'pendaftaran_mulai' => $event->mdl_pendaftaran_mulai 
-                            ? Carbon::parse($event->mdl_pendaftaran_mulai)->format('d M Y, H:i')
-                            : null,
-                        'pendaftaran_selesai' => $event->mdl_pendaftaran_selesai
-                            ? Carbon::parse($event->mdl_pendaftaran_selesai)->format('d M Y, H:i')
-                            : null,
-                        'hari_lalu' => $daysAgo . ' hari yang lalu',
-                        'status_acara' => 'Selesai',
-                        'status_pendaftaran' => $statusPendaftaran,
-                        'banner' => $event->mdl_banner_acara ? url('storage/' . $event->mdl_banner_acara) : null,
+                    // Add media URLs
+                    $eventArray['media_urls'] = [
+                        'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                     ];
+
+                    return $eventArray;
                 });
 
             return response()->json([
@@ -254,58 +182,20 @@ class EventController extends Controller
                 ->orderBy('mdl_acara_mulai', 'desc')
                 ->get()
                 ->map(function ($event) {
-                    $now = Carbon::now();
-                    $startDate = Carbon::parse($event->mdl_acara_mulai);
-                    $endDate = $event->mdl_acara_selesai ? Carbon::parse($event->mdl_acara_selesai) : null;
+                    $eventArray = $event->toArray();
 
-                    // Tentukan status berdasarkan tanggal
-                    if ($startDate->isFuture()) {
-                        $statusAcara = 'Akan Datang';
-                    } elseif ($endDate && $endDate->isPast()) {
-                        $statusAcara = 'Selesai';
-                    } elseif ($endDate && $startDate->isPast() && $endDate->isFuture()) {
-                        $statusAcara = 'Sedang Berlangsung';
-                    } else {
-                        $statusAcara = $startDate->diffInDays($now) > 1 ? 'Selesai' : 'Sedang Berlangsung';
-                    }
+                    // Remove sensitive internal fields
+                    unset($eventArray['mdl_banner_acara']);
+                    unset($eventArray['mdl_file_acara']);
+                    unset($eventArray['mdl_file_rundown']);
+                    unset($eventArray['mdl_template_sertifikat']);
 
-                    // Tentukan status pendaftaran
-                    $statusPendaftaran = 'Ditutup';
-                    if ($event->mdl_pendaftaran_mulai && $event->mdl_pendaftaran_selesai) {
-                        $pendaftaranMulai = Carbon::parse($event->mdl_pendaftaran_mulai);
-                        $pendaftaranSelesai = Carbon::parse($event->mdl_pendaftaran_selesai);
-                        
-                        if ($now->lt($pendaftaranMulai)) {
-                            $statusPendaftaran = 'Segera Hadir';
-                        } elseif ($now->between($pendaftaranMulai, $pendaftaranSelesai)) {
-                            $statusPendaftaran = 'Bisa Daftar';
-                        }
-                    }
-
-                    return [
-                        'id' => $event->id,
-                        'slug' => $event->mdl_slug,
-                        'nama' => $event->mdl_nama,
-                        'tipe' => ucfirst($event->mdl_tipe),
-                        'lokasi' => $event->mdl_lokasi,
-                        'tanggal_mulai' => $startDate->format('d M Y, H:i'),
-                        'tanggal_mulai_raw' => $event->mdl_acara_mulai,
-                        'pendaftaran_mulai' => $event->mdl_pendaftaran_mulai 
-                            ? Carbon::parse($event->mdl_pendaftaran_mulai)->format('d M Y, H:i')
-                            : null,
-                        'pendaftaran_selesai' => $event->mdl_pendaftaran_selesai
-                            ? Carbon::parse($event->mdl_pendaftaran_selesai)->format('d M Y, H:i')
-                            : null,
-                        'status_acara' => $statusAcara,
-                        'status_pendaftaran' => $statusPendaftaran,
-                        'status_event' => $event->mdl_status, // draft, active, closed, archived
+                    // Add media URLs
+                    $eventArray['media_urls'] = [
                         'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
-                        'deskripsi_singkat' => strlen($event->mdl_deskripsi) > 150
-                            ? substr($event->mdl_deskripsi, 0, 150) . '...'
-                            : $event->mdl_deskripsi,
-                        'mdl_kode' => $event->mdl_kode,
-                        'mdl_presensi_aktif' => $event->mdl_presensi_aktif,
                     ];
+
+                    return $eventArray;
                 });
 
             return response()->json([
