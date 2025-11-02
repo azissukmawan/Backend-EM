@@ -19,12 +19,12 @@ class StorageHelper
         }
 
         // Get AWS configuration from environment
-        $awsUrl = config('filesystems.disks.s3.url');
+        $awsEndpoint = env('AWS_ENDPOINT');
         $awsBucket = config('filesystems.disks.s3.bucket');
 
         // Build the full URL
-        if ($awsUrl && $awsBucket) {
-            return rtrim($awsUrl, '/') . '/' . ltrim($awsBucket, '/') . '/' . ltrim($path, '/');
+        if ($awsEndpoint && $awsBucket) {
+            return rtrim($awsEndpoint, '/') . '/' . ltrim($awsBucket, '/') . '/' . ltrim($path, '/');
         }
 
         return null;
