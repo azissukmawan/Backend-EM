@@ -24,6 +24,9 @@ class ToggleQRController extends Controller
 
         $event = ModulAcara::findOrFail($id);
 
+        // Konversi boolean ke integer
+        $status = $request->boolean('status_qr') ? 1 : 0;
+
         // Update status presensi
         $event->update([
             'mdl_presensi_aktif' => $request->status_qr,
