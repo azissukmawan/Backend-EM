@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\StorageHelper;
 use App\Models\PendaftaranAcara;
 use Illuminate\Http\Request;
 
@@ -15,9 +16,9 @@ class EventParticipantController extends Controller
         if (!$request->user() || $request->user()->role !== 'superadmin') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
-        
+
         $query = PendaftaranAcara::with([
-            'user',
+            'user.detailPeserta',
             'modulAcara',
             'presensi' => function ($q) use ($eventId) {
                 $q->where('modul_acara_id', $eventId);
@@ -39,6 +40,7 @@ class EventParticipantController extends Controller
                 'nama' => $item->user->name ?? '-',
                 'email' => $item->user->email ?? '-',
                 'no_whatsapp' => $item->user->telp ?? '-',
+                'photo_profile' => StorageHelper::getStorageUrl($item->user->detailPeserta?->foto),
                 'type' => $item->event->mdl_tipe ?? '-',
                 'status' => $item->presensi->status ?? 'Belum Hadir',
                 'doorprize' => (bool) $item->has_doorprize,
