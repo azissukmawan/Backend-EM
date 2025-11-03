@@ -32,10 +32,16 @@ class EventController extends Controller
                     $eventArray = $event->toArray();
 
                     // Remove sensitive internal fields
+                    unset($eventArray['user_id']);
                     unset($eventArray['mdl_banner_acara']);
                     unset($eventArray['mdl_file_acara']);
                     unset($eventArray['mdl_file_rundown']);
                     unset($eventArray['mdl_template_sertifikat']);
+                    unset($eventArray['mdl_kode_qr']);
+                    unset($eventArray['mdl_presensi_aktif']);
+                    unset($eventArray['mdl_link_wa']);
+                    unset($eventArray['mdl_sertifikat_aktif']);
+                    unset($eventArray['mdl_doorprize_aktif']);
 
                     // Add media URLs
                     $eventArray['media_urls'] = [
@@ -82,10 +88,16 @@ class EventController extends Controller
                     $eventArray = $event->toArray();
 
                     // Remove sensitive internal fields
+                    unset($eventArray['user_id']);
                     unset($eventArray['mdl_banner_acara']);
                     unset($eventArray['mdl_file_acara']);
                     unset($eventArray['mdl_file_rundown']);
                     unset($eventArray['mdl_template_sertifikat']);
+                    unset($eventArray['mdl_kode_qr']);
+                    unset($eventArray['mdl_presensi_aktif']);
+                    unset($eventArray['mdl_link_wa']);
+                    unset($eventArray['mdl_sertifikat_aktif']);
+                    unset($eventArray['mdl_doorprize_aktif']);
 
                     // Add media URLs
                     $eventArray['media_urls'] = [
@@ -139,10 +151,16 @@ class EventController extends Controller
                     $eventArray = $event->toArray();
 
                     // Remove sensitive internal fields
+                    unset($eventArray['user_id']);
                     unset($eventArray['mdl_banner_acara']);
                     unset($eventArray['mdl_file_acara']);
                     unset($eventArray['mdl_file_rundown']);
                     unset($eventArray['mdl_template_sertifikat']);
+                    unset($eventArray['mdl_kode_qr']);
+                    unset($eventArray['mdl_presensi_aktif']);
+                    unset($eventArray['mdl_link_wa']);
+                    unset($eventArray['mdl_sertifikat_aktif']);
+                    unset($eventArray['mdl_doorprize_aktif']);
 
                     // Add media URLs
                     $eventArray['media_urls'] = [
@@ -185,10 +203,16 @@ class EventController extends Controller
                     $eventArray = $event->toArray();
 
                     // Remove sensitive internal fields
+                    unset($eventArray['user_id']);
                     unset($eventArray['mdl_banner_acara']);
                     unset($eventArray['mdl_file_acara']);
                     unset($eventArray['mdl_file_rundown']);
                     unset($eventArray['mdl_template_sertifikat']);
+                    unset($eventArray['mdl_kode_qr']);
+                    unset($eventArray['mdl_presensi_aktif']);
+                    unset($eventArray['mdl_link_wa']);
+                    unset($eventArray['mdl_sertifikat_aktif']);
+                    unset($eventArray['mdl_doorprize_aktif']);
 
                     // Add media URLs
                     $eventArray['media_urls'] = [
@@ -260,8 +284,6 @@ class EventController extends Controller
                 'slug' => $event->mdl_slug,
                 'nama' => $event->mdl_nama,
                 'deskripsi' => $event->mdl_deskripsi,
-                'mdl_kode_qr' => $event->mdl_kode_qr,
-                'mdl_presensi_aktif' => $event->mdl_presensi_aktif,
                 'tipe' => ucfirst($event->mdl_tipe),
                 'status_acara' => $statusAcara,
                 'lokasi' => $event->mdl_lokasi,
@@ -289,8 +311,6 @@ class EventController extends Controller
                     'online' => $event->mdl_maks_peserta_online,
                 ],
                 'status' => $event->mdl_status,
-                'sertifikat_aktif' => $event->mdl_sertifikat_aktif,
-                'doorprize_aktif' => $event->mdl_doorprize_aktif,
                 'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                 'catatan' => $event->mdl_catatan,
                 'created_at' => Carbon::parse($event->created_at)->format('d M Y, H:i'),
