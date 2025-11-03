@@ -43,6 +43,10 @@ class EventController extends Controller
                     // unset($eventArray['mdl_sertifikat_aktif']);
                     // unset($eventArray['mdl_doorprize_aktif']);
 
+                    $eventArray['mdl_file_acara'] = StorageHelper::getStorageUrl($event->mdl_file_acara);
+                    $eventArray['mdl_banner_acara'] = StorageHelper::getStorageUrl($event->mdl_banner_acara);
+                    $eventArray['mdl_file_rundown'] = StorageHelper::getStorageUrl($event->mdl_file_rundown);
+                    $eventArray['mdl_template_sertifikat'] = StorageHelper::getStorageUrl($event->mdl_template_sertifikat);
                     // Add media URLs
                     $eventArray['media_urls'] = [
                         'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
@@ -99,6 +103,10 @@ class EventController extends Controller
                     // unset($eventArray['mdl_sertifikat_aktif']);
                     // unset($eventArray['mdl_doorprize_aktif']);
 
+                    $eventArray['mdl_file_acara'] = StorageHelper::getStorageUrl($event->mdl_file_acara);
+                    $eventArray['mdl_banner_acara'] = StorageHelper::getStorageUrl($event->mdl_banner_acara);
+                    $eventArray['mdl_file_rundown'] = StorageHelper::getStorageUrl($event->mdl_file_rundown);
+                    $eventArray['mdl_template_sertifikat'] = StorageHelper::getStorageUrl($event->mdl_template_sertifikat);
                     // Add media URLs
                     $eventArray['media_urls'] = [
                         'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
@@ -162,6 +170,10 @@ class EventController extends Controller
                     // unset($eventArray['mdl_sertifikat_aktif']);
                     // unset($eventArray['mdl_doorprize_aktif']);
 
+                    $eventArray['mdl_file_acara'] = StorageHelper::getStorageUrl($event->mdl_file_acara);
+                    $eventArray['mdl_banner_acara'] = StorageHelper::getStorageUrl($event->mdl_banner_acara);
+                    $eventArray['mdl_file_rundown'] = StorageHelper::getStorageUrl($event->mdl_file_rundown);
+                    $eventArray['mdl_template_sertifikat'] = StorageHelper::getStorageUrl($event->mdl_template_sertifikat);
                     // Add media URLs
                     $eventArray['media_urls'] = [
                         'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
@@ -213,6 +225,11 @@ class EventController extends Controller
                     // unset($eventArray['mdl_link_wa']);
                     // unset($eventArray['mdl_sertifikat_aktif']);
                     // unset($eventArray['mdl_doorprize_aktif']);
+
+                    $eventArray['mdl_file_acara'] = StorageHelper::getStorageUrl($event->mdl_file_acara);
+                    $eventArray['mdl_banner_acara'] = StorageHelper::getStorageUrl($event->mdl_banner_acara);
+                    $eventArray['mdl_file_rundown'] = StorageHelper::getStorageUrl($event->mdl_file_rundown);
+                    $eventArray['mdl_template_sertifikat'] = StorageHelper::getStorageUrl($event->mdl_template_sertifikat);
 
                     // Add media URLs
                     $eventArray['media_urls'] = [
@@ -284,6 +301,13 @@ class EventController extends Controller
                 'slug' => $event->mdl_slug,
                 'nama' => $event->mdl_nama,
                 'deskripsi' => $event->mdl_deskripsi,
+                'mdl_kode_qr' => $event->mdl_kode_qr,
+                'mdl_presensi_aktif' => $event->mdl_presensi_aktif,
+                'mdl_file_acara' => StorageHelper::getStorageUrl($event->mdl_file_acara),
+                'mdl_file_rundown' => StorageHelper::getStorageUrl($event->mdl_file_rundown),
+                'mdl_template_sertifikat' => StorageHelper::getStorageUrl($event->mdl_template_sertifikat),
+                'mdl_link_wa' => $event->mdl_link_wa,
+                'mdl_kategori' => ucfirst($event->mdl_kategori),
                 'tipe' => ucfirst($event->mdl_tipe),
                 'status_acara' => $statusAcara,
                 'lokasi' => $event->mdl_lokasi,
@@ -311,6 +335,8 @@ class EventController extends Controller
                     'online' => $event->mdl_maks_peserta_online,
                 ],
                 'status' => $event->mdl_status,
+                'sertifikat_aktif' => $event->mdl_sertifikat_aktif,
+                'doorprize_aktif' => $event->mdl_doorprize_aktif,
                 'banner' => StorageHelper::getStorageUrl($event->mdl_banner_acara),
                 'catatan' => $event->mdl_catatan,
                 'created_at' => Carbon::parse($event->created_at)->format('d M Y, H:i'),
