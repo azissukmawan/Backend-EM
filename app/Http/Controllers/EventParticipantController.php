@@ -39,7 +39,7 @@ class EventParticipantController extends Controller
                 'nama' => $item->user->name ?? '-',
                 'email' => $item->user->email ?? '-',
                 'no_whatsapp' => $item->user->telp ?? '-',
-                'type' => $item->event->mdl_tipe ?? '-',
+                'type' => $item->modulAcara->mdl_tipe ?? '-',
                 'status' => $item->presensi->status ?? 'Belum Hadir',
                 'doorprize' => (bool) $item->has_doorprize,
             ];
