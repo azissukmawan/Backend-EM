@@ -170,6 +170,7 @@ class ModulAcaraController extends Controller
             // Admin tidak boleh mengirim/menentukan QR secara manual
             'mdl_kode_qr' => 'prohibited',
             'mdl_link_wa' => 'nullable|string|max:255',
+            'mdl_doorprize_aktif' => 'nullable|boolean',
         ]);
 
         // Handle file uploads
@@ -262,6 +263,7 @@ class ModulAcaraController extends Controller
 
             // QR tidak boleh diubah
             'mdl_kode_qr' => 'prohibited',
+            'mdl_doorprize_aktif' => 'nullable|boolean',
         ]);
 
         // --- Upload file baru dan hapus file lama ---
