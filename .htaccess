@@ -1,4 +1,9 @@
 <IfModule mod_rewrite.c>
+    # Block access to hidden files like .env, .htaccess, .gitignore
+    <FilesMatch "^\.">
+        Require all denied
+    </FilesMatch>
+
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
