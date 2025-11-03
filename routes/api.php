@@ -89,8 +89,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // Admin routes for managing participant & stats
     Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
     Route::get('/admin/events/{eventId}/stats', [EventStatisticController::class, 'show']);
-
     Route::get('/dashboard-admin/stats', [DashboardAdminController::class, 'stats']);
+
+    Route::post('/events/{eventId}/daftar-invite', [PendaftaranAcaraController::class, 'daftarInvite']);
 });
 
 Route::middleware(['auth:sanctum', 'peserta'])->group(function () {
@@ -107,7 +108,6 @@ Route::middleware(['auth:sanctum', 'peserta'])->group(function () {
 
 // Pendaftaran Acara - Untuk peserta
     Route::post('/events/{eventId}/daftar', [PendaftaranAcaraController::class, 'daftar']);
-    Route::post('/events/{eventId}/daftar-invite', [PendaftaranAcaraController::class, 'daftarInvite']);
     Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
     Route::get('/me/pendaftaran', [PendaftaranAcaraController::class, 'listSaya']);
     Route::get('events/{eventId}/me', [PendaftaranAcaraController::class, 'detailEventSaya']);
