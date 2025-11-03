@@ -32,16 +32,16 @@ class EventController extends Controller
                     $eventArray = $event->toArray();
 
                     // Remove sensitive internal fields
-                    unset($eventArray['user_id']);
-                    unset($eventArray['mdl_banner_acara']);
-                    unset($eventArray['mdl_file_acara']);
-                    unset($eventArray['mdl_file_rundown']);
-                    unset($eventArray['mdl_template_sertifikat']);
-                    unset($eventArray['mdl_kode_qr']);
-                    unset($eventArray['mdl_presensi_aktif']);
-                    unset($eventArray['mdl_link_wa']);
-                    unset($eventArray['mdl_sertifikat_aktif']);
-                    unset($eventArray['mdl_doorprize_aktif']);
+                    // unset($eventArray['user_id']);
+                    // unset($eventArray['mdl_banner_acara']);
+                    // unset($eventArray['mdl_file_acara']);
+                    // unset($eventArray['mdl_file_rundown']);
+                    // unset($eventArray['mdl_template_sertifikat']);
+                    // unset($eventArray['mdl_kode_qr']);
+                    // unset($eventArray['mdl_presensi_aktif']);
+                    // unset($eventArray['mdl_link_wa']);
+                    // unset($eventArray['mdl_sertifikat_aktif']);
+                    // unset($eventArray['mdl_doorprize_aktif']);
 
                     // Add media URLs
                     $eventArray['media_urls'] = [
@@ -88,16 +88,16 @@ class EventController extends Controller
                     $eventArray = $event->toArray();
 
                     // Remove sensitive internal fields
-                    unset($eventArray['user_id']);
-                    unset($eventArray['mdl_banner_acara']);
-                    unset($eventArray['mdl_file_acara']);
-                    unset($eventArray['mdl_file_rundown']);
-                    unset($eventArray['mdl_template_sertifikat']);
-                    unset($eventArray['mdl_kode_qr']);
-                    unset($eventArray['mdl_presensi_aktif']);
-                    unset($eventArray['mdl_link_wa']);
-                    unset($eventArray['mdl_sertifikat_aktif']);
-                    unset($eventArray['mdl_doorprize_aktif']);
+                    // unset($eventArray['user_id']);
+                    // unset($eventArray['mdl_banner_acara']);
+                    // unset($eventArray['mdl_file_acara']);
+                    // unset($eventArray['mdl_file_rundown']);
+                    // unset($eventArray['mdl_template_sertifikat']);
+                    // unset($eventArray['mdl_kode_qr']);
+                    // unset($eventArray['mdl_presensi_aktif']);
+                    // unset($eventArray['mdl_link_wa']);
+                    // unset($eventArray['mdl_sertifikat_aktif']);
+                    // unset($eventArray['mdl_doorprize_aktif']);
 
                     // Add media URLs
                     $eventArray['media_urls'] = [
@@ -151,16 +151,16 @@ class EventController extends Controller
                     $eventArray = $event->toArray();
 
                     // Remove sensitive internal fields
-                    unset($eventArray['user_id']);
-                    unset($eventArray['mdl_banner_acara']);
-                    unset($eventArray['mdl_file_acara']);
-                    unset($eventArray['mdl_file_rundown']);
-                    unset($eventArray['mdl_template_sertifikat']);
-                    unset($eventArray['mdl_kode_qr']);
-                    unset($eventArray['mdl_presensi_aktif']);
-                    unset($eventArray['mdl_link_wa']);
-                    unset($eventArray['mdl_sertifikat_aktif']);
-                    unset($eventArray['mdl_doorprize_aktif']);
+                    // unset($eventArray['user_id']);
+                    // unset($eventArray['mdl_banner_acara']);
+                    // unset($eventArray['mdl_file_acara']);
+                    // unset($eventArray['mdl_file_rundown']);
+                    // unset($eventArray['mdl_template_sertifikat']);
+                    // unset($eventArray['mdl_kode_qr']);
+                    // unset($eventArray['mdl_presensi_aktif']);
+                    // unset($eventArray['mdl_link_wa']);
+                    // unset($eventArray['mdl_sertifikat_aktif']);
+                    // unset($eventArray['mdl_doorprize_aktif']);
 
                     // Add media URLs
                     $eventArray['media_urls'] = [
@@ -203,16 +203,16 @@ class EventController extends Controller
                     $eventArray = $event->toArray();
 
                     // Remove sensitive internal fields
-                    unset($eventArray['user_id']);
-                    unset($eventArray['mdl_banner_acara']);
-                    unset($eventArray['mdl_file_acara']);
-                    unset($eventArray['mdl_file_rundown']);
-                    unset($eventArray['mdl_template_sertifikat']);
-                    unset($eventArray['mdl_kode_qr']);
-                    unset($eventArray['mdl_presensi_aktif']);
-                    unset($eventArray['mdl_link_wa']);
-                    unset($eventArray['mdl_sertifikat_aktif']);
-                    unset($eventArray['mdl_doorprize_aktif']);
+                    // unset($eventArray['user_id']);
+                    // unset($eventArray['mdl_banner_acara']);
+                    // unset($eventArray['mdl_file_acara']);
+                    // unset($eventArray['mdl_file_rundown']);
+                    // unset($eventArray['mdl_template_sertifikat']);
+                    // unset($eventArray['mdl_kode_qr']);
+                    // unset($eventArray['mdl_presensi_aktif']);
+                    // unset($eventArray['mdl_link_wa']);
+                    // unset($eventArray['mdl_sertifikat_aktif']);
+                    // unset($eventArray['mdl_doorprize_aktif']);
 
                     // Add media URLs
                     $eventArray['media_urls'] = [
