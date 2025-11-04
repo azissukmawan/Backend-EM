@@ -41,8 +41,8 @@ class EventParticipantController extends Controller
                 'email' => $item->user->email ?? '-',
                 'no_whatsapp' => $item->user->telp ?? '-',
                 'photo_profile' => StorageHelper::getStorageUrl($item->user->detailPeserta?->foto),
-                'type' => $item->event->mdl_tipe ?? '-',
-                'status' => $item->presensi->status ?? 'Belum Hadir',
+                'type' => $item->modulAcara->mdl_tipe ?? '-',
+                'status' =>  $item->presensi->status ?? 'Belum Hadir',
                 'doorprize' => (bool) $item->has_doorprize,
             ];
         });
