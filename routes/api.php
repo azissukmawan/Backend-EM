@@ -23,6 +23,7 @@ Route::get('/events/all', [EventController::class, 'all']); // SEMUA event (akti
 Route::get('/events/upcoming', [EventController::class, 'upcoming']); // Event AKAN DATANG
 Route::get('/events/past', [EventController::class, 'past']); // Event SUDAH SELESAI
 Route::get('/events/{identifier}', [EventController::class, 'show']); // Detail event by ID or slug
+Route::get('/events/{identifier}/mobile', [EventController::class, 'showMobile']); // Detail event by ID or slug
 Route::get('/events/{id}/participants', [EventParticipantController::class, 'index']);
 
 // Auth routes
@@ -63,7 +64,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-
 });
 
 // Admin routes - Hanya untuk admin/superadmin/panitia
@@ -106,7 +106,7 @@ Route::middleware(['auth:sanctum', 'peserta'])->group(function () {
         Route::get('/dashboard/events/{identifier}', [DashboardController::class, 'show']);
     });
 
-// Pendaftaran Acara - Untuk peserta
+    // Pendaftaran Acara - Untuk peserta
     Route::post('/events/{eventId}/daftar', [PendaftaranAcaraController::class, 'daftar']);
     Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
     Route::get('/me/pendaftaran', [PendaftaranAcaraController::class, 'listSaya']);

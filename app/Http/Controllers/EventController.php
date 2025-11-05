@@ -271,7 +271,7 @@ class EventController extends Controller
                         ->orWhere('mdl_slug', $identifier);
                 })
                 ->first();
-                //s
+            //s
             if (!$event) {
                 return response()->json([
                     'success' => false,
@@ -348,6 +348,42 @@ class EventController extends Controller
                 'data' => [
                     'event' => $eventDetail
                 ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve event detail',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+    public function showMobile($identifier)
+    {
+        try {
+            // Cari berdasarkan ID atau slug
+            $event = ModulAcara::whereIn('mdl_kategori', ['public', 'private'])
+                ->where(function ($query) use ($identifier) {
+                    $query->where('id', $identifier)
+                        ->orWhere('mdl_slug', $identifier);
+                })
+                ->first();
+            //s
+            if (!$event) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Event not found'
+                ], 404);
+            }
+
+            $event->mdl_file_acara = StorageHelper::getStorageUrl($event->mdl_file_acara);
+            $event->mdl_banner_acara = StorageHelper::getStorageUrl($event->mdl_banner_acara);
+            $event->mdl_file_rundown = StorageHelper::getStorageUrl($event->mdl_file_rundown);
+            $event->mdl_template_sertifikat = StorageHelper::getStorageUrl($event->mdl_template_sertifikat);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Event detail retrieved successfully',
+                'data' => $event
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
