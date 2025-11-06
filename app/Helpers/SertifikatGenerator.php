@@ -62,8 +62,8 @@ class SertifikatGenerator
             $height = imagesy($img);
 
             // $fontPath = public_path('fonts/MomoSignature-Regular.ttf');
-            $fontPathNomor = public_path('fonts/arial_narrow_7.ttf');
-            $fontPathNama = public_path('fonts/MomoSignature-Regular.ttf');
+            $fontPathNomor = public_path('fonts/montserrat/Montserrat-Regular.ttf');
+            $fontPathNama = public_path('fonts/montserrat/Montserrat-Medium.ttf.ttf');
 
 
 
@@ -112,7 +112,6 @@ class SertifikatGenerator
             @unlink($outputPath);
 
             return $s3Path;
-
         } catch (\Exception $e) {
             \Log::error('Error generating sertifikat: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
