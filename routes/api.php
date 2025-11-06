@@ -85,6 +85,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // Doorprize routes
     Route::post('/admin/events/{eventId}/draw-winner', [DoorprizeController::class, 'drawWinner']);
     Route::get('/admin/events/{eventId}/winners', [DoorprizeController::class, 'getWinners']);
+    Route::delete('/admin/events/{eventId}/winners/{userId}', [DoorprizeController::class, 'deleteWinner']);
 
     // Admin routes for managing participant & stats
     Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
