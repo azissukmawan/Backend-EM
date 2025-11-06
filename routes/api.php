@@ -15,6 +15,7 @@ use App\Http\Controllers\DoorprizeController;
 use App\Http\Controllers\PendaftaranAcaraController;
 use App\Http\Controllers\PresensiController;
 use App\Http\Controllers\ToggleQRController;
+use App\Http\Controllers\ManageUsersController;
 
 
 // Public routes - Landing Page Events
@@ -74,6 +75,10 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/admin/events', [ModulAcaraController::class, 'store']);
     Route::put('/admin/events/{id}', [ModulAcaraController::class, 'update']);
     Route::delete('/admin/events/{id}', [ModulAcaraController::class, 'destroy']);
+
+    // Admin routes - manage users
+    Route::get('/admin/users', [ManageUsersController::class, 'index']);
+    Route::delete('/admin/users/{id}', [ManageUsersController::class, 'destroy']);
 
     // QR & Presensi
     Route::get('/admin/events/{id}/qr', [ModulAcaraController::class, 'qr']);
