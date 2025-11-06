@@ -70,9 +70,9 @@ class SertifikatGenerator
             // 1. NOMOR SERTIFIKAT (di atas)
 
             $nomorText = "Nomor: $noSertifikat";
-            $nomorFontSize = 25; // Ukuran font lebih besar
-            $nomorPosY = (int)($height * 0.30);
-            $nomorColor = imagecolorallocate($img, 30, 58, 138); // Biru gelap
+            $nomorFontSize = 60; // Ukuran font lebih besar
+            $nomorPosY = (int)($height * 0.29);
+            $nomorColor = imagecolorallocate($img, 100, 100, 100); // Biru gelap
 
             // Hitung lebar text untuk center alignment
             $nomorBox = imagettfbbox($nomorFontSize, 0, $fontPathNomor, $nomorText);
@@ -82,9 +82,9 @@ class SertifikatGenerator
             imagettftext($img, $nomorFontSize, 0, $nomorPosX, $nomorPosY, $nomorColor, $fontPathNomor, $nomorText);
 
             // ✅ 2. NAMA PESERTA (di tengah)
-            $namaFontSize = 45; // Font lebih besar untuk nama
-            $namaPosY = (int)($height * 0.45);
-            $namaColor = imagecolorallocate($img, 0, 0, 0); // Hitam
+            $namaFontSize = 80; // Font lebih besar untuk nama
+            $namaPosY = (int)($height * 0.43);
+            $namaColor = imagecolorallocate($img, 0, 102, 128); // Hitam
 
             // Hitung lebar text untuk center alignment
             $namaBox = imagettfbbox($namaFontSize, 0, $fontPathNama, $namaPeserta);
