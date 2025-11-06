@@ -78,7 +78,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     // Admin routes - manage users
     Route::get('/admin/users', [ManageUsersController::class, 'index']);
+    Route::get('/admin/users-not-verified', [ManageUsersController::class, 'userNotVerified']);
     Route::delete('/admin/users/{id}', [ManageUsersController::class, 'destroy']);
+    Route::delete('/admin/users/unverified/destroy-all', [ManageUsersController::class, 'destroyAllNotVerified']);
 
     // QR & Presensi
     Route::get('/admin/events/{id}/qr', [ModulAcaraController::class, 'qr']);
