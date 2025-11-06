@@ -63,14 +63,14 @@ class SertifikatGenerator
 
             // $fontPath = public_path('fonts/MomoSignature-Regular.ttf');
             $fontPathNomor = public_path('fonts/montserrat/Montserrat-Regular.ttf');
-            $fontPathNama = public_path('fonts/montserrat/Montserrat-Medium.ttf.ttf');
+            $fontPathNama = public_path('fonts/montserrat/Montserrat-Medium.ttf');
 
 
 
             // 1. NOMOR SERTIFIKAT (di atas)
 
             $nomorText = "Nomor: $noSertifikat";
-            $nomorFontSize = 60; // Ukuran font lebih besar
+            $nomorFontSize = 45; // Ukuran font lebih besar
             $nomorPosY = (int)($height * 0.29);
             $nomorColor = imagecolorallocate($img, 100, 100, 100); // Biru gelap
 
