@@ -173,8 +173,6 @@ class DoorprizeController extends Controller
                 'removed_winner' => [
                     'id' => $winner->id,
                     'name' => $winner->name,
-                    'email' => $winner->email,
-                    'username' => $winner->username,
                 ],
                 'event' => [
                     'id' => $event->id,
