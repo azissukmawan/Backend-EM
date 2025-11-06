@@ -61,50 +61,37 @@ class SertifikatGenerator
             $width = imagesx($img);
             $height = imagesy($img);
 
-            // Path font (pastikan font tersedia)
-            $fontPath = public_path('fonts/MomoSignature-Regular.ttf');
+            // $fontPath = public_path('fonts/MomoSignature-Regular.ttf');
+            $fontPathNomor = public_path('fonts/arial_narrow_7.ttf');
+            $fontPathNama = public_path('fonts/MomoSignature-Regular.ttf');
 
-            if (!file_exists($fontPath)) {
-                \Log::error("Font Arial ihiw.ttf tidak ditemukan di: $fontPath");
-                $fontPath = null; // fallback
-            }
 
-            // =====================================================================
-            // 🔧 KONFIGURASI FONT SIZE
-            // =====================================================================
-            $fontSizeNomor = 20;  // ukuran font untuk nomor sertifikat
-            $fontSizeNama  = 20; // ukuran font untuk nama peserta
-            // =====================================================================
 
-            // ✅ 1. NOMOR SERTIFIKAT (di atas)
+            // 1. NOMOR SERTIFIKAT (di atas)
+
             $nomorText = "Nomor: $noSertifikat";
+            $nomorFontSize = 25; // Ukuran font lebih besar
             $nomorPosY = (int)($height * 0.30);
             $nomorColor = imagecolorallocate($img, 30, 58, 138); // Biru gelap
 
-            if ($fontPath) {
-                // Hitung posisi center horizontal
-                $bbox = imagettfbbox($fontSizeNomor, 0, $fontPath, $nomorText);
-                $textWidth = abs($bbox[4] - $bbox[0]);
-                $nomorPosX = (int)(($width - $textWidth) / 2);
+            // Hitung lebar text untuk center alignment
+            $nomorBox = imagettfbbox($nomorFontSize, 0, $fontPathNomor, $nomorText);
+            $nomorWidth = abs($nomorBox[4] - $nomorBox[0]);
+            $nomorPosX = (int)(($width - $nomorWidth) / 2);
 
-                imagettftext($img, $fontSizeNomor, 0, $nomorPosX, $nomorPosY, $nomorColor, $fontPath, $nomorText);
-            } else {
-                imagestring($img, 5, (int)($width / 2 - 100), $nomorPosY, $nomorText, $nomorColor);
-            }
+            imagettftext($img, $nomorFontSize, 0, $nomorPosX, $nomorPosY, $nomorColor, $fontPathNomor, $nomorText);
 
             // ✅ 2. NAMA PESERTA (di tengah)
+            $namaFontSize = 45; // Font lebih besar untuk nama
             $namaPosY = (int)($height * 0.45);
             $namaColor = imagecolorallocate($img, 0, 0, 0); // Hitam
 
-            if ($fontPath) {
-                $bbox = imagettfbbox($fontSizeNama, 0, $fontPath, $namaPeserta);
-                $textWidth = abs($bbox[4] - $bbox[0]);
-                $namaPosX = (int)(($width - $textWidth) / 2);
+            // Hitung lebar text untuk center alignment
+            $namaBox = imagettfbbox($namaFontSize, 0, $fontPathNama, $namaPeserta);
+            $namaWidth = abs($namaBox[4] - $namaBox[0]);
+            $namaPosX = (int)(($width - $namaWidth) / 2);
 
-                imagettftext($img, $fontSizeNama, 0, $namaPosX, $namaPosY, $namaColor, $fontPath, $namaPeserta);
-            } else {
-                imagestring($img, 5, (int)($width / 2 - 50), $namaPosY, $namaPeserta, $namaColor);
-            }
+            imagettftext($img, $namaFontSize, 0, $namaPosX, $namaPosY, $namaColor, $fontPathNama, $namaPeserta);
 
             // Generate nama file unik
             $fileName = 'sertifikat_' . time() . '_' . Str::random(10) . '.jpg';

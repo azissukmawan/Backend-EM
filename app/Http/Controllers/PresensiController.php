@@ -57,7 +57,7 @@ class PresensiController extends Controller
         }
 
         // Simpan presensi baru
-        PresensiAcara::create([
+        $presensi = PresensiAcara::create([
             'pendaftaran_acara_id' => $pendaftaran->id,
             'modul_acara_id' => $event->id,
             'user_id' => $user->id,
@@ -116,6 +116,7 @@ class PresensiController extends Controller
         Sertifikat::create([
             'user_id' => $user->id,
             'modul_acara_id' => $event->id,
+            'presensi_acara_id' => $presensi->id,
             'name_peserta' => $user->name,
             'kode_sertif' => $noSertifikat,
             'tanggal_sertif' => $event->mdl_acara_selesai ?? now(),

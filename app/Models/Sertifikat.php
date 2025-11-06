@@ -11,6 +11,7 @@ class Sertifikat extends Model
     protected $fillable = [
         'user_id',
         'modul_acara_id',
+        'presensi_acara_id',
         'name_peserta',
         'kode_sertif',
         'tanggal_sertif',

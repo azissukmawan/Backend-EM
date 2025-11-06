@@ -23,6 +23,10 @@ return new class extends Migration
                 $table->unsignedBigInteger('modul_acara_id')->after('user_id')->nullable();
                 $table->foreign('modul_acara_id')->references('id')->on('modul_acara')->onDelete('cascade');
             }
+            if (!Schema::hasColumn('sertifikats', 'presensi_acara_id')) {
+                $table->unsignedBigInteger('presensi_acara_id')->after('modul_acara_id')->nullable();
+                $table->foreign('presensi_acara_id')->references('id')->on('presensi_acara')->onDelete('cascade');
+            }
 
             // Cek dan tambah kolom file_sertifikat
             if (!Schema::hasColumn('sertifikats', 'file_sertifikat')) {
@@ -45,6 +49,10 @@ return new class extends Migration
             if (Schema::hasColumn('sertifikats', 'modul_acara_id')) {
                 $table->dropForeign(['modul_acara_id']);
                 $table->dropColumn('modul_acara_id');
+            }
+            if (Schema::hasColumn('sertifikats', 'presensi_acara_id')) {
+                $table->dropForeign(['presensi_acara_id']);
+                $table->dropColumn('presensi_acara_id');
             }
 
             if (Schema::hasColumn('sertifikats', 'file_sertifikat')) {
