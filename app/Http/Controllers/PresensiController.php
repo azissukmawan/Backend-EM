@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\ModulAcara;
 use App\Models\PendaftaranAcara;
 use App\Models\PresensiAcara;
+use App\Models\Sertifikat;
 use Illuminate\Http\Request;
+use App\Helpers\SertifikatGenerator;
+use Illuminate\Support\Facades\Log;
 
 class PresensiController extends Controller
 {
@@ -54,7 +57,7 @@ class PresensiController extends Controller
         }
 
         // Simpan presensi baru
-        PresensiAcara::create([
+        $presensi = PresensiAcara::create([
             'pendaftaran_acara_id' => $pendaftaran->id,
             'modul_acara_id' => $event->id,
             'user_id' => $user->id,
@@ -82,10 +85,49 @@ class PresensiController extends Controller
             'no_sertifikat' => $noSertifikat,
         ]);
 
+         // 🎨 Generate file sertifikat dengan overlay nama dan nomor
+        $fileSertifikat = null;
+        try {
+            if ($event->mdl_template_sertifikat) {
+                // Format tanggal acara
+                $tanggalAcara = '';
+                if ($event->mdl_acara_selesai) {
+                    try {
+                        $tanggalAcara = \Carbon\Carbon::parse($event->mdl_acara_selesai)->format('d F Y');
+                    } catch (\Exception $e) {
+                        $tanggalAcara = $event->mdl_acara_selesai;
+                    }
+                }
+
+                $fileSertifikat = SertifikatGenerator::generate(
+                    templatePath: $event->mdl_template_sertifikat,
+                    namaPeserta: $user->name,
+                    noSertifikat: $noSertifikat,
+                    namaAcara: $event->mdl_nama,
+                    tanggalAcara: $tanggalAcara
+                );
+            }
+        } catch (\Exception $e) {
+            // Log error tapi tidak menggagalkan presensi
+            Log::error('Gagal generate sertifikat: ' . $e->getMessage());
+        }
+
+        // Simpan data sertifikat ke database
+        Sertifikat::create([
+            'user_id' => $user->id,
+            'modul_acara_id' => $event->id,
+            'presensi_acara_id' => $presensi->id,
+            'name_peserta' => $user->name,
+            'kode_sertif' => $noSertifikat,
+            'tanggal_sertif' => $event->mdl_acara_selesai ?? now(),
+            'file_sertifikat' => $fileSertifikat, // Path file sertifikat yang sudah di-generate
+        ]);
+
         return response()->json([
             'status' => true,
             'message' => 'Presensi berhasil dicatat',
             'no_sertifikat' => $noSertifikat,
+            'sertifikat_generated' => $fileSertifikat ? true : false,
         ]);
     }
 
