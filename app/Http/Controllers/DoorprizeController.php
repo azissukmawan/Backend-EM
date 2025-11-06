@@ -132,4 +132,53 @@ class DoorprizeController extends Controller
             ]
         ]);
     }
+
+    public function deleteWinner(Request $request, $eventId, $userId)
+    {
+        // Check if user is superadmin
+        if (!$request->user() || $request->user()->role !== 'superadmin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        // Validate that the event exists
+        $event = ModulAcara::findOrFail($eventId);
+
+        // Check if the user is actually a winner for this event
+        $winnerExists = DB::table('pendaftaran_acara')
+            ->where('modul_acara_id', $eventId)
+            ->where('user_id', $userId)
+            ->where('has_doorprize', true)
+            ->exists();
+
+        if (!$winnerExists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User is not a winner for this event.'
+            ], 400);
+        }
+
+        // Get winner details before deletion
+        $winner = User::find($userId);
+
+        // Reset has_doorprize to 0 (false)
+        DB::table('pendaftaran_acara')
+            ->where('modul_acara_id', $eventId)
+            ->where('user_id', $userId)
+            ->update(['has_doorprize' => false]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Winner removed successfully.',
+            'data' => [
+                'removed_winner' => [
+                    'id' => $winner->id,
+                    'name' => $winner->name,
+                ],
+                'event' => [
+                    'id' => $event->id,
+                    'name' => $event->mdl_nama,
+                ]
+            ]
+        ]);
+    }
 }
