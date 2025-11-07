@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 return new class extends Migration
 {
@@ -49,7 +50,11 @@ return new class extends Migration
         }
 
         // Step 4: Drop index bermasalah
-        $indexes = ['presensi_pendaftaran_unique', 'unique_attendance_per_day'];
+        $indexes = [
+            'presensi_pendaftaran_unique',
+            'unique_attendance_per_day',
+            'presensi_acara_modul_acara_id_user_id_unique'  // ← TAMBAHKAN INI
+        ];
 
         foreach ($indexes as $indexName) {
             try {
@@ -101,46 +106,153 @@ return new class extends Migration
         }
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        // Drop foreign key
-        try {
-            DB::statement("ALTER TABLE presensi_acara DROP FOREIGN KEY presensi_acara_pendaftaran_acara_id_foreign");
-        } catch (\Exception $e) {
-            // Ignore
-        }
+/**
+ * Reverse the migrations.
+ */
+public function down(): void
+{
+    // Step 1: Drop SEMUA foreign keys di tabel presensi_acara
+    try {
+        $allForeignKeys = DB::select(
+            "SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = 'presensi_acara'
+             AND REFERENCED_TABLE_NAME IS NOT NULL"
+        );
 
-        // Drop unique constraint baru
-        try {
-            DB::statement("ALTER TABLE presensi_acara DROP INDEX unique_presensi_per_hari");
-        } catch (\Exception $e) {
-            // Ignore
+        foreach ($allForeignKeys as $fk) {
+            try {
+                DB::unprepared("ALTER TABLE presensi_acara DROP FOREIGN KEY {$fk->CONSTRAINT_NAME}");
+                \Log::info("✓ Dropped foreign key: {$fk->CONSTRAINT_NAME}");
+            } catch (\Exception $e) {
+                \Log::warning("Failed to drop FK {$fk->CONSTRAINT_NAME}: " . $e->getMessage());
+            }
         }
+    } catch (\Exception $e) {
+        \Log::warning("Failed to get foreign keys: " . $e->getMessage());
+    }
 
-        // Recreate constraint lama
+    // Step 2: Drop unique constraint baru
+    try {
+        $indexExists = DB::select(
+            "SHOW INDEX FROM presensi_acara WHERE Key_name = 'unique_presensi_per_hari'"
+        );
+
+        if (!empty($indexExists)) {
+            DB::unprepared("ALTER TABLE presensi_acara DROP INDEX unique_presensi_per_hari");
+            \Log::info("✓ Dropped unique constraint: unique_presensi_per_hari");
+        }
+    } catch (\Exception $e) {
+        \Log::error("CRITICAL: Failed to drop unique constraint: " . $e->getMessage());
+        throw $e;
+    }
+
+    // Step 3: Drop kolom tanggal_absen
+    if (Schema::hasColumn('presensi_acara', 'tanggal_absen')) {
         try {
-            DB::statement(
+            DB::unprepared("ALTER TABLE presensi_acara DROP COLUMN tanggal_absen");
+            \Log::info("✓ Dropped column: tanggal_absen");
+        } catch (\Exception $e) {
+            \Log::error("Failed to drop tanggal_absen: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    // Step 4: Recreate unique index lama
+    try {
+        $indexExists = DB::select(
+            "SHOW INDEX FROM presensi_acara WHERE Key_name = 'presensi_pendaftaran_unique'"
+        );
+
+        if (empty($indexExists)) {
+            DB::unprepared(
+                "ALTER TABLE presensi_acara
+                 ADD UNIQUE KEY presensi_pendaftaran_unique (pendaftaran_acara_id)"
+            );
+            \Log::info("✓ Created unique index: presensi_pendaftaran_unique");
+        }
+    } catch (\Exception $e) {
+        \Log::warning("Failed to create presensi_pendaftaran_unique: " . $e->getMessage());
+    }
+
+    // Step 5: Recreate SEMUA foreign keys yang diperlukan
+    try {
+        // FK untuk pendaftaran_acara_id
+        $fkExists = DB::select(
+            "SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = 'presensi_acara'
+             AND COLUMN_NAME = 'pendaftaran_acara_id'
+             AND REFERENCED_TABLE_NAME IS NOT NULL"
+        );
+
+        if (empty($fkExists)) {
+            DB::unprepared(
                 "ALTER TABLE presensi_acara
                  ADD CONSTRAINT presensi_acara_pendaftaran_acara_id_foreign
-                 UNIQUE KEY (pendaftaran_acara_id),
-                 ADD FOREIGN KEY (pendaftaran_acara_id)
+                 FOREIGN KEY (pendaftaran_acara_id)
                  REFERENCES pendaftaran_acara(id)
                  ON DELETE CASCADE"
             );
-        } catch (\Exception $e) {
-            // Ignore
+            \Log::info("✓ Created FK: presensi_acara_pendaftaran_acara_id_foreign");
         }
-
-        // Drop kolom tanggal_absen
-        if (Schema::hasColumn('presensi_acara', 'tanggal_absen')) {
-            Schema::table('presensi_acara', function (Blueprint $table) {
-                $table->dropColumn('tanggal_absen');
-            });
-        }
+    } catch (\Exception $e) {
+        \Log::warning("Failed to create FK pendaftaran_acara_id: " . $e->getMessage());
     }
+
+    // Recreate FK lainnya jika ada (user_id, modul_acara_id)
+    try {
+        // FK untuk user_id
+        $userFkExists = DB::select(
+            "SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = 'presensi_acara'
+             AND COLUMN_NAME = 'user_id'
+             AND REFERENCED_TABLE_NAME IS NOT NULL"
+        );
+
+        if (empty($userFkExists)) {
+            DB::unprepared(
+                "ALTER TABLE presensi_acara
+                 ADD CONSTRAINT presensi_acara_user_id_foreign
+                 FOREIGN KEY (user_id)
+                 REFERENCES users(id)
+                 ON DELETE CASCADE"
+            );
+            \Log::info("✓ Created FK: presensi_acara_user_id_foreign");
+        }
+    } catch (\Exception $e) {
+        \Log::warning("Failed to create FK user_id: " . $e->getMessage());
+    }
+
+    try {
+        // FK untuk modul_acara_id
+        $modulFkExists = DB::select(
+            "SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = 'presensi_acara'
+             AND COLUMN_NAME = 'modul_acara_id'
+             AND REFERENCED_TABLE_NAME IS NOT NULL"
+        );
+
+        if (empty($modulFkExists)) {
+            DB::unprepared(
+                "ALTER TABLE presensi_acara
+                 ADD CONSTRAINT presensi_acara_modul_acara_id_foreign
+                 FOREIGN KEY (modul_acara_id)
+                 REFERENCES modul_acara(id)
+                 ON DELETE CASCADE"
+            );
+            \Log::info("✓ Created FK: presensi_acara_modul_acara_id_foreign");
+        }
+    } catch (\Exception $e) {
+        \Log::warning("Failed to create FK modul_acara_id: " . $e->getMessage());
+    }
+}
 
     /**
      * Remove duplicate entries before adding unique constraint
