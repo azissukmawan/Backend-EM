@@ -129,6 +129,5 @@ Route::middleware(['auth:sanctum', 'peserta'])->group(function () {
     Route::post('/presensi', [PresensiController::class, 'store']);               // peserta absen
     Route::get('/acara/{id}/presensi', [PresensiController::class, 'index']);     // daftar presensi
     Route::get('/acara/{id}/presensi/me', [PresensiController::class, 'me']);     // status user sendiri
-    Route::get('/acara/{id}/qr-code', [PresensiController::class, 'showQr']);     // tampilkan QR event
     Route::post('/acara/{id}/presensi/reset', [PresensiController::class, 'reset']); // reset presensi
 });
