@@ -11,14 +11,15 @@ use App\Helpers\SertifikatGenerator;
 class GenerateSertifikatController extends Controller
 {
     //
-    public static function generateNomorSertifikat($modulAcaraId, $userId)
+    public static function generateNomorSertifikat($modulAcaraId)
     {
+        $user = auth()->user();
         $event = ModulAcara::where('id', $modulAcaraId)->first();
 
         $totalHariEvent = $this->hitungTotalHariEvent($event);
 
         $jumlahHariHadir = PresensiAcara::where('modul_acara_id', $modulAcaraId)
-            ->where('user_id', $userId)
+            ->where('user_id', $user->id)
             ->distinct('tanggal_absen')
             ->count();
 
@@ -31,15 +32,14 @@ class GenerateSertifikatController extends Controller
             ], 400);
         }
 
-        $sertifikat = Sertifikat::where('user_id', $userId)
+        $sertifikat = Sertifikat::where('user_id', $user->id)
             ->where('modul_acara_id', $modulAcaraId)
             ->first();
 
         if ($sertifikat) {
-            // Query
             return response()->json([
-                'success' => false,
-                'message' => 'Bers.',
+                'success' => true,
+                'message' => 'Berhasil.',
                 'data' => $sertifikat->file_sertifikat,
             ], 200);
         }
@@ -56,6 +56,11 @@ class GenerateSertifikatController extends Controller
                     }
                 }
 
+                // Generate nomor sertifikat unik
+
+                $masterNomor = MasterNomorSertifikat::where('modul_acara_id', $modulAcaraId)->first();
+
+                $noSertifikat = replaceCertificateNumber($masterNomor->format_nomor, $masterNomor->nomor_sk);
 
 
                 $fileSertifikat = SertifikatGenerator::generate(
@@ -66,11 +71,26 @@ class GenerateSertifikatController extends Controller
                     tanggalAcara: $tanggalAcara
                 );
                 $sertifikatGenerated = true;
+
+                $masterNomor->update([
+                    'nomor_sk' => $masterNomor->nomor_sk + 1,
+                ]);
+
             }
         } catch (\Exception $e) {
             // Log error tapi tidak menggagalkan presensi
             Log::error('Gagal generate sertifikat: ' . $e->getMessage());
         }
+
+        Sertifikat::create([
+                'user_id' => $user->id,
+                'modul_acara_id' => $event->id,
+                'presensi_acara_id' => $presensi->id,
+                'name_peserta' => $user->name,
+                'kode_sertif' => $noSertifikat,
+                'tanggal_sertif' => $event->mdl_acara_selesai ?? now(),
+                'file_sertifikat' => $fileSertifikat,
+            ]);
     }
 
     private function hitungTotalHariEvent($event)
@@ -85,5 +105,18 @@ class GenerateSertifikatController extends Controller
 
         // Hitung selisih hari + 1 (karena hari pertama dan terakhir dihitung)
         return $mulai->diffInDays($selesai) + 1;
+    }
+
+    private function replaceCertificateNumber($input, $newNumber)
+    {
+        // Ambil prefix (huruf + titik)
+        preg_match('/^[A-Za-z\.]+/', $input, $prefixMatch);
+        $prefix = $prefixMatch[0] ?? '';
+
+        // Ambil suffix (mulai dari / pertama)
+        $suffix = preg_replace('/^[A-Za-z\.]+[0-9]+/', '', $input);
+
+        // Gabungkan dengan nomor baru
+        return $prefix . $newNumber . $suffix;
     }
 }
