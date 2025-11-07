@@ -17,6 +17,7 @@ class PendaftaranAcara extends Model
         'metode_daftar',
         'has_doorprize',
         'no_sertifikat',
+        'tipe_kehadiran',
     ];
 
     public function modulAcara()

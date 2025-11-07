@@ -35,13 +35,24 @@ class EventParticipantController extends Controller
 
         // Format respons
         $data = $participants->map(function ($item) {
+            // Untuk hybrid events, gunakan tipe_kehadiran yang dipilih user
+            // Untuk non-hybrid events, gunakan mdl_tipe dari event
+            $type = '-';
+            if ($item->modulAcara) {
+                if ($item->modulAcara->mdl_tipe === 'hybrid') {
+                    $type = $item->tipe_kehadiran ?? null;
+                } else {
+                    $type = $item->modulAcara->mdl_tipe;
+                }
+            }
+            
             return [
                 'id' => $item->id,
                 'nama' => $item->user->name ?? '-',
                 'email' => $item->user->email ?? '-',
                 'no_whatsapp' => $item->user->telp ?? '-',
                 'photo_profile' => StorageHelper::getStorageUrl($item->user->detailPeserta?->foto),
-                'type' => $item->modulAcara->mdl_tipe ?? '-',
+                'type' => $type,
                 'status' => $item->presensi->status ?? 'Belum Hadir',
                 'doorprize' => (bool) $item->has_doorprize,
             ];
