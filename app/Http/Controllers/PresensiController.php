@@ -47,13 +47,15 @@ class PresensiController extends Controller
             return response()->json(['status' => false, 'message' => 'Presensi belum dibuka atau sudah ditutup'], 400);
         }
 
-        // Cegah double absensi
-        $sudahAbsen = PresensiAcara::where('modul_acara_id', $event->id)
+        // VALIDASI: Cegah double absensi di hari yang sama
+        $tanggalHariIni = $now->toDateString();
+        $sudahAbsenHariIni = PresensiAcara::where('modul_acara_id', $event->id)
             ->where('user_id', $user->id)
+            ->whereDate('tanggal_absen', $tanggalHariIni)
             ->exists();
 
-        if ($sudahAbsen) {
-            return response()->json(['status' => false, 'message' => 'Anda sudah melakukan presensi'], 400);
+        if ($sudahAbsenHariIni) {
+            return response()->json(['status' => false, 'message' => 'Anda sudah melakukan presensi hari ini'], 400);
         }
 
         // Simpan presensi baru
@@ -62,78 +64,99 @@ class PresensiController extends Controller
             'modul_acara_id' => $event->id,
             'user_id' => $user->id,
             'waktu_absen' => now(),
+            'tanggal_absen' => $tanggalHariIni, // 🔹 Simpan tanggal absen
             'status' => 'Hadir',
         ]);
 
+        // Hitung total hari periode event (dari mdl_acara_mulai sampai mdl_acara_selesai)
+        $totalHariEvent = $this->hitungTotalHariEvent($event);
+
+        // Hitung sudah berapa hari user ini absen
+        $jumlahHariHadir = PresensiAcara::where('modul_acara_id', $event->id)
+            ->where('user_id', $user->id)
+            ->distinct('tanggal_absen')
+            ->count();
+
+        // CEK: Apakah user sudah hadir di SEMUA hari?
+        $hadirSemua = ($jumlahHariHadir >= $totalHariEvent);
+
         /**
-         * 🔹 Generate nomor sertifikat unik
-         * Format: {mdl_kode}/{tahun}/{urutan tiga digit}
+         * Generate nomor sertifikat dan file sertifikat
+         * HANYA jika user sudah hadir di semua hari periode acara
          */
-        $tahun = now()->year;
-
-        // Hitung urutan presensi untuk event ini
-        $jumlahPresensi = PresensiAcara::where('modul_acara_id', $event->id)->count();
-
-        // Nomor urut dengan padding 3 digit
-        $urutan = str_pad($jumlahPresensi, 3, '0', STR_PAD_LEFT);
-
-        // Buat nomor sertifikat
-        $noSertifikat = "{$event->mdl_kode}/{$tahun}/{$urutan}";
-
-        // Update ke tabel PendaftaranAcara
-        $pendaftaran->update([
-            'no_sertifikat' => $noSertifikat,
-        ]);
-
-         // 🎨 Generate file sertifikat dengan overlay nama dan nomor
+        $noSertifikat = null;
         $fileSertifikat = null;
-        try {
-            if ($event->mdl_template_sertifikat) {
-                // Format tanggal acara
-                $tanggalAcara = '';
-                if ($event->mdl_acara_selesai) {
-                    try {
-                        $tanggalAcara = \Carbon\Carbon::parse($event->mdl_acara_selesai)->format('d F Y');
-                    } catch (\Exception $e) {
-                        $tanggalAcara = $event->mdl_acara_selesai;
+        $sertifikatGenerated = false;
+
+        if ($hadirSemua) {
+            $tahun = now()->year;
+
+            // Hitung urutan presensi untuk event ini (hanya user yang hadir semua hari)
+            $jumlahPresensiLengkap = PendaftaranAcara::where('modul_acara_id', $event->id)
+                ->whereNotNull('no_sertifikat')
+                ->count();
+
+            // Nomor urut dengan padding 3 digit
+            $urutan = str_pad($jumlahPresensiLengkap + 1, 3, '0', STR_PAD_LEFT);
+
+            // Buat nomor sertifikat
+            $noSertifikat = "{$event->mdl_kode}/{$tahun}/{$urutan}";
+
+            // Update ke tabel PendaftaranAcara
+            $pendaftaran->update([
+                'no_sertifikat' => $noSertifikat,
+            ]);
+
+            // Generate file sertifikat dengan overlay nama dan nomor
+            try {
+                if ($event->mdl_template_sertifikat) {
+                    // Format tanggal acara
+                    $tanggalAcara = '';
+                    if ($event->mdl_acara_selesai) {
+                        try {
+                            $tanggalAcara = \Carbon\Carbon::parse($event->mdl_acara_selesai)->format('d F Y');
+                        } catch (\Exception $e) {
+                            $tanggalAcara = $event->mdl_acara_selesai;
+                        }
                     }
+
+                    $fileSertifikat = SertifikatGenerator::generate(
+                        templatePath: $event->mdl_template_sertifikat,
+                        namaPeserta: $user->name,
+                        noSertifikat: $noSertifikat,
+                        namaAcara: $event->mdl_nama,
+                        tanggalAcara: $tanggalAcara
+                    );
+                    $sertifikatGenerated = true;
                 }
-
-                $fileSertifikat = SertifikatGenerator::generate(
-                    templatePath: $event->mdl_template_sertifikat,
-                    namaPeserta: $user->name,
-                    noSertifikat: $noSertifikat,
-                    namaAcara: $event->mdl_nama,
-                    tanggalAcara: $tanggalAcara
-                );
+            } catch (\Exception $e) {
+                // Log error tapi tidak menggagalkan presensi
+                Log::error('Gagal generate sertifikat: ' . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            // Log error tapi tidak menggagalkan presensi
-            Log::error('Gagal generate sertifikat: ' . $e->getMessage());
-        }
 
-        // Simpan data sertifikat ke database
-        Sertifikat::create([
-            'user_id' => $user->id,
-            'modul_acara_id' => $event->id,
-            'presensi_acara_id' => $presensi->id,
-            'name_peserta' => $user->name,
-            'kode_sertif' => $noSertifikat,
-            'tanggal_sertif' => $event->mdl_acara_selesai ?? now(),
-            'file_sertifikat' => $fileSertifikat, // Path file sertifikat yang sudah di-generate
-        ]);
+            // Simpan data sertifikat ke database
+            Sertifikat::create([
+                'user_id' => $user->id,
+                'modul_acara_id' => $event->id,
+                'presensi_acara_id' => $presensi->id,
+                'name_peserta' => $user->name,
+                'kode_sertif' => $noSertifikat,
+                'tanggal_sertif' => $event->mdl_acara_selesai ?? now(),
+                'file_sertifikat' => $fileSertifikat,
+            ]);
+        }
 
         return response()->json([
             'status' => true,
             'message' => 'Presensi berhasil dicatat',
             'no_sertifikat' => $noSertifikat,
-            'sertifikat_generated' => $fileSertifikat ? true : false,
+            'sertifikat_generated' => $sertifikatGenerated,
         ]);
     }
 
 
     /**
-     * 🧾 API 2 - Daftar presensi peserta (untuk panitia)
+     * API 2 - Daftar presensi peserta (untuk panitia)
      */
     public function index($id)
     {
@@ -158,7 +181,7 @@ class PresensiController extends Controller
     }
 
     /**
-     * 🧾 API 3 - Status presensi user sendiri
+     * API 3 - Status presensi user sendiri
      */
     public function me($id)
     {
@@ -183,7 +206,7 @@ class PresensiController extends Controller
     }
 
     /**
-     * 🧾 API 4 - Tampilkan QR Code Event (frontend generate visualnya)
+     * API 4 - Tampilkan QR Code Event (frontend generate visualnya)
      */
     public function showQr($id)
     {
@@ -204,7 +227,25 @@ class PresensiController extends Controller
     }
 
     /**
-     * 🔢 Hitung jarak antar koordinat (meter)
+     * Hitung total hari periode event
+     * Menghitung berapa hari event berlangsung (dari mdl_acara_mulai sampai mdl_acara_selesai)
+     */
+    private function hitungTotalHariEvent($event)
+    {
+        if (!$event->mdl_acara_selesai) {
+            // Jika tidak ada tanggal selesai, dianggap 1 hari
+            return 1;
+        }
+
+        $mulai = \Carbon\Carbon::parse($event->mdl_acara_mulai)->startOfDay();
+        $selesai = \Carbon\Carbon::parse($event->mdl_acara_selesai)->startOfDay();
+
+        // Hitung selisih hari + 1 (karena hari pertama dan terakhir dihitung)
+        return $mulai->diffInDays($selesai) + 1;
+    }
+
+    /**
+     * Hitung jarak antar koordinat (meter)
      */
     private function hitungJarak($lat1, $lon1, $lat2, $lon2)
     {

@@ -12,6 +12,11 @@ class PresensiAcara extends Model
     protected $table = 'presensi_acara';
     protected $guarded = [];
 
+    protected $casts = [
+        'waktu_absen' => 'datetime',
+        'tanggal_absen' => 'date',
+    ];
+
     public function event()
     {
         return $this->belongsTo(ModulAcara::class, 'modul_acara_id');
