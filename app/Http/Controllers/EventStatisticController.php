@@ -46,9 +46,13 @@ class EventStatisticController extends Controller
                 break;
 
             case 'hybrid':
-                // Hybrid -> keduanya diisi jumlah peserta
-                $onlineCount = $jumlahPendaftar;
-                $offlineCount = $jumlahPendaftar;
+                // Hybrid -> ambil dari tipe_kehadiran yang dipilih peserta
+                $onlineCount = PendaftaranAcara::where('modul_acara_id', $eventId)
+                    ->where('tipe_kehadiran', 'online')
+                    ->count();
+                $offlineCount = PendaftaranAcara::where('modul_acara_id', $eventId)
+                    ->where('tipe_kehadiran', 'offline')
+                    ->count();
                 break;
         }
 

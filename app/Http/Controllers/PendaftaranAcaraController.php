@@ -104,6 +104,14 @@ class PendaftaranAcaraController extends Controller
                 }
             }
         }
+        // Validasi tipe_kehadiran untuk acara hybrid
+        $tipeKehadiran = null;
+        if ($acara->mdl_tipe === 'hybrid') {
+            $request->validate([
+                'tipe_kehadiran' => 'required|in:online,offline',
+            ]);
+            $tipeKehadiran = $request->tipe_kehadiran;
+        }
 
         // Simpan pendaftaran
         PendaftaranAcara::create([
@@ -111,6 +119,7 @@ class PendaftaranAcaraController extends Controller
             'user_id' => $user->id,
             'metode_daftar' => 'self',
             'no_sertifikat' => null,
+            'tipe_kehadiran' => $tipeKehadiran,
             'waktu_daftar' => now(),
         ]);
 
