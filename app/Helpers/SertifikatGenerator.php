@@ -16,7 +16,7 @@ class SertifikatGenerator
      * @param string $namaPeserta Nama peserta
      * @param string $noSertifikat Nomor sertifikat
      * @param string $namaAcara Nama acara
-     * @param string $tanggalAcara Tanggal acara
+     * @param string $tanggalSertifikat Tanggal acara
      * @return string|null Path file sertifikat PDF yang sudah di-generate
      */
     public static function generate(
@@ -24,7 +24,7 @@ class SertifikatGenerator
         string $namaPeserta,
         string $noSertifikat,
         string $namaAcara = '',
-        string $tanggalAcara = ''
+        string $tanggalSertifikat = ''
     ): ?string {
         try {
             // Download template dari S3
@@ -292,7 +292,6 @@ class SertifikatGenerator
                 }
 
                 return $compressedPdf;
-
             } catch (\Exception $e) {
                 Log::error("Compression failed: " . $e->getMessage());
             }
