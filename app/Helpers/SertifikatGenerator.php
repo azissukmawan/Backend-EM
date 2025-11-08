@@ -65,7 +65,7 @@ class SertifikatGenerator
 
             // $fontPath = public_path('fonts/MomoSignature-Regular.ttf');
             $fontPathNomor = public_path('fonts/montserrat/Montserrat-Regular.ttf');
-            $fontPathNama = public_path('fonts/montserrat/Montserrat-Medium.ttf');
+            $fontPathNama = public_path('fonts/montserrat/Montserrat-SemiBold.ttf');
 
 
 

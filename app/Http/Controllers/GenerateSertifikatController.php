@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\ModulAcara;
 use App\Models\Sertifikat;
 use Illuminate\Http\Request;
 use App\Models\PresensiAcara;
 use App\Helpers\StorageHelper;
+use Illuminate\Support\Facades\DB;
 use App\Helpers\SertifikatGenerator;
 use App\Models\MasterNomorSertifikat;
 
@@ -15,82 +17,86 @@ class GenerateSertifikatController extends Controller
     //
     public function generateNomorSertifikat($modulAcaraId)
     {
-        $user = auth()->user();
-        $event = ModulAcara::where('id', $modulAcaraId)->first();
+        $user  = auth()->user();
+        $event = ModulAcara::find($modulAcaraId);
+
         if (!$event) {
             return response()->json(['status' => false, 'message' => 'Event tidak ditemukan'], 404);
         }
 
         $totalHariEvent = $this->hitungTotalHariEvent($event);
 
-        $jumlahHariHadir = PresensiAcara::where('modul_acara_id', $modulAcaraId)
-            ->where('user_id', $user->id)
-            ->distinct('tanggal_absen')
-            ->count();
+        $jumlahHariHadir = PresensiAcara::where('modul_acara_id', $modulAcaraId)->where('user_id', $user->id)
+            ->distinct()
+            ->count('tanggal_absen');
 
-        $hadirSemua = ($jumlahHariHadir >= $totalHariEvent);
-
-        if (!$hadirSemua) {
-            return response()->json(['status' => false, 'message' => 'Absen tidak lengkap.',], 400);
+        if ($jumlahHariHadir < $totalHariEvent) {
+            return response()->json(['status' => false, 'message' => 'Absen tidak lengkap.'], 400);
         }
 
-        // Cek Apakah Nomor Sertifikat Sudah Terbit Atau Belum
-        $masterNomorSertifikat = MasterNomorSertifikat::where('modul_acara_id', $modulAcaraId)->first();
+        // kalau sudah punya sertifikat, langsung balikin
+        $existing = Sertifikat::where('user_id', $user->id)->where('modul_acara_id', $modulAcaraId)->first();
 
-        if (!$masterNomorSertifikat) {
-            return response()->json(['status' => false, 'message' => 'Sertifikat belum terbit'], 400);
-        }
-
-        $sertifikat = Sertifikat::where('user_id', $user->id)
-            ->where('modul_acara_id', $modulAcaraId)
-            ->first();
-
-        if ($sertifikat) {
+        if ($existing) {
             return response()->json([
-                'status' => true,
-                'message' => 'Sertifikat sudah di generate.',
-                'data' => StorageHelper::getStorageUrl($sertifikat->file_sertifikat),
+                'status'  => true,
+                'message' => 'Sertifikat sudah digenerate.',
+                'data'    => StorageHelper::getStorageUrl($existing->file_sertifikat),
             ], 200);
         }
 
+        $masterNomor = MasterNomorSertifikat::where('modul_acara_id', $modulAcaraId)->first();
+
+        // jika nomor sk belum di generate admin
+        if (!$masterNomor) {
+            return response()->json(['status' => false, 'message' => 'Sertifikat belum terbit'], 400);
+        }
+
         try {
+            $filePath = DB::transaction(function () use ($modulAcaraId, $user, $event) {
+                // Kunci row agar tidak tabrakan antar peserta
+                $master = MasterNomorSertifikat::where('modul_acara_id', $modulAcaraId)
+                    ->lockForUpdate()
+                    ->first();
 
-            $noSertifikat = "{$masterNomorSertifikat->prefix_format_nomor}{$masterNomorSertifikat->nomor_sk}{$masterNomorSertifikat->suffix_format_nomor}";
+                $noSertifikat = "{$master->prefix_format_nomor}{$master->nomor_sk}{$master->suffix_format_nomor}";
+                $tanggalSertifikat = Carbon::parse($master->tanggal_pengesahan)->format('d F Y');
 
-            $tanggalSertifikat = \Carbon\Carbon::parse($masterNomorSertifikat->tanggal_pengesahan)->format('d F Y');
+                // generate file sertif
+                $fileSertifikat = SertifikatGenerator::generate(
+                    templatePath: $master->template_sertifikat,
+                    namaPeserta: $user->name,
+                    noSertifikat: $noSertifikat,
+                    namaAcara: $event->mdl_nama,
+                    tanggalSertifikat: $tanggalSertifikat
+                );
 
+                // Simpan sertifikat baru
+                Sertifikat::create([
+                    'user_id'         => $user->id,
+                    'modul_acara_id'  => $event->id,
+                    'name_peserta'    => $user->name,
+                    'kode_sertif'     => $noSertifikat,
+                    'tanggal_sertif'  => $master->tanggal_pengesahan,
+                    'file_sertifikat' => $fileSertifikat,
+                ]);
 
-            $fileSertifikat = SertifikatGenerator::generate(
-                templatePath: $masterNomorSertifikat->template_sertifikat,
-                namaPeserta: $user->name,
-                noSertifikat: $noSertifikat,
-                namaAcara: $event->mdl_nama,
-                tanggalSertifikat: $tanggalSertifikat
-            );
+                // naikkan nomor_sk untuk next peserta (masih dalam lock)
+                $master->increment('nomor_sk');
 
-            $masterNomorSertifikat->update([
-                'nomor_sk' => $masterNomorSertifikat->nomor_sk + 1,
-            ]);
-
-            $sertifikat = Sertifikat::create([
-                'user_id' => $user->id,
-                'modul_acara_id' => $event->id,
-                'name_peserta' => $user->name,
-                'kode_sertif' => $noSertifikat,
-                'tanggal_sertif' => $masterNomorSertifikat->tanggal_pengesahan,
-                'file_sertifikat' => $fileSertifikat,
-            ]);
+                return $fileSertifikat;
+            });
 
             return response()->json([
-                'status' => true,
+                'status'  => true,
                 'message' => 'Sertifikat Berhasil Di Generate',
-                'data' => StorageHelper::getStorageUrl($sertifikat->file_sertifikat),
-            ]);
-        } catch (\Exception $e) {
+                'data'    => StorageHelper::getStorageUrl($filePath),
+            ], 201);
+        } catch (\Throwable $e) {
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Terjadi kesalahan saat generate sertifikat.',
-                'error' => $e->getMessage(), // opsional, bisa dihapus kalau mau disembunyikan
+                // 'error'   => $e->getMessage(),
             ], 500);
         }
     }
