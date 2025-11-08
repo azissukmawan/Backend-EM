@@ -15,10 +15,22 @@ return new class extends Migration
             $table->id();
             $table->foreignId('modul_acara_id')->constrained('modul_acara')->cascadeOnDelete();
 
-            $table->integer('nomor_sk')->unique();
+            $table->integer('nomor_sk');
+            $table->year('tahun');
+            $table->date('tanggal_pengesahan')->nullable();
             $table->string('format_nomor');
+            $table->string('prefix_format_nomor');
+            $table->string('suffix_format_nomor');
+
+            $table->string('template_sertifikat')->nullable();
+
+            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('updated_by')->nullable();
 
             $table->timestamps();
+
+            $table->foreign('created_by')->references('id')->on('users');
+            $table->foreign('updated_by')->references('id')->on('users');
         });
     }
 

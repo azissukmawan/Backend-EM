@@ -12,11 +12,12 @@ use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\EventStatisticController;
 use App\Http\Controllers\SertifikatController;
 use App\Http\Controllers\DoorprizeController;
+use App\Http\Controllers\GenerateSertifikatController;
 use App\Http\Controllers\PendaftaranAcaraController;
 use App\Http\Controllers\PresensiController;
 use App\Http\Controllers\ToggleQRController;
 use App\Http\Controllers\ManageUsersController;
-
+use App\Http\Controllers\MasterNomorSertifikatController;
 
 // Public routes - Landing Page Events
 Route::get('/events', [EventController::class, 'index']); // Event yang SEDANG AKTIF
@@ -76,6 +77,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/events/{id}', [ModulAcaraController::class, 'update']);
     Route::delete('/admin/events/{id}', [ModulAcaraController::class, 'destroy']);
 
+    Route::post('/admin/events/{id}/generate-nomor-sertifikat', [MasterNomorSertifikatController::class, 'store']);
+
     // Admin routes - manage users
     Route::get('/admin/users', [ManageUsersController::class, 'index']);
     Route::get('/admin/users-not-verified', [ManageUsersController::class, 'userNotVerified']);
@@ -119,11 +122,13 @@ Route::middleware(['auth:sanctum', 'peserta'])->group(function () {
     Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
     Route::get('/me/pendaftaran', [PendaftaranAcaraController::class, 'listSaya']);
     Route::get('events/{eventId}/me', [PendaftaranAcaraController::class, 'detailEventSaya']);
+    Route::post('/events/{eventid}/generate-sertif', [GenerateSertifikatController::class, 'generateNomorSertifikat']);
 
     // Sertifikat routes
     Route::post('/sertifikat/generate', [SertifikatController::class, 'generate']);
     Route::get('/sertifikat/acara/{idAcara}/download', [SertifikatController::class, 'download']);
     Route::get('/sertifikat/me', [SertifikatController::class, 'mySertifikat']);
+
 
     // Presensi Acara routes
     Route::post('/presensi', [PresensiController::class, 'store']);               // peserta absen
