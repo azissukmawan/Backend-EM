@@ -51,26 +51,28 @@ class PresensiController extends Controller
         $tanggalHariIni = $now->toDateString();
         $sudahAbsenHariIni = PresensiAcara::where('modul_acara_id', $event->id)
             ->where('user_id', $user->id)
+            ->where('sesi_acara', $event->mdl_sesi_acara)
             ->whereDate('tanggal_absen', $tanggalHariIni)
-            ->exists();
+            ->first();
 
         if ($sudahAbsenHariIni) {
-            return response()->json(['status' => false, 'message' => 'Anda sudah melakukan presensi hari ini'], 400);
+            return response()->json(['status' => false, 'message' => "Anda sudah melakukan presensi sesi ke-{$sudahAbsenHariIni->sesi_acara}."], 400);
         }
 
         // Simpan presensi baru
-        PresensiAcara::create([
+        $presensi = PresensiAcara::create([
             'pendaftaran_acara_id' => $pendaftaran->id,
             'modul_acara_id' => $event->id,
             'user_id' => $user->id,
             'waktu_absen' => now(),
+            'sesi_acara' => $event->mdl_sesi_acara,
             'tanggal_absen' => $tanggalHariIni, // 🔹 Simpan tanggal absen
             'status' => 'Hadir',
         ]);
 
         return response()->json([
             'status' => true,
-            'message' => 'Presensi berhasil dicatat',
+            'message' => "Presensi berhasil dicatat, sesi ke-{$presensi->sesi_acara}.",
             // 'no_sertifikat' => $noSertifikat,
             // 'sertifikat_generated' => $sertifikatGenerated,
         ]);
