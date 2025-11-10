@@ -3,20 +3,21 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ModulAcaraController;
 use App\Http\Controllers\EventController;
-use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\EventParticipantController;
-use App\Http\Controllers\EventStatisticController;
-use App\Http\Controllers\SertifikatController;
-use App\Http\Controllers\DoorprizeController;
-use App\Http\Controllers\GenerateSertifikatController;
-use App\Http\Controllers\PendaftaranAcaraController;
 use App\Http\Controllers\PresensiController;
 use App\Http\Controllers\ToggleQRController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DoorprizeController;
+use App\Http\Controllers\ModulAcaraController;
+use App\Http\Controllers\SertifikatController;
 use App\Http\Controllers\ManageUsersController;
+use App\Http\Controllers\EventSessionController;
+use App\Http\Controllers\DashboardAdminController;
+use App\Http\Controllers\EventStatisticController;
+use App\Http\Controllers\EventParticipantController;
+use App\Http\Controllers\PendaftaranAcaraController;
+use App\Http\Controllers\GenerateSertifikatController;
 use App\Http\Controllers\MasterNomorSertifikatController;
 
 // Public routes - Landing Page Events
@@ -89,6 +90,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/admin/events/{id}/qr', [ModulAcaraController::class, 'qr']);
     Route::patch('/admin/events/{id}/presensi', [ModulAcaraController::class, 'setPresensiAktif']);
     Route::put('/admin/event/{id}/presensi/toggle', [ToggleQRController::class, 'toggle']);
+    Route::put('/admin/event/{id}/sesi/toggle', [EventSessionController::class, 'toggle']);
 
 
 
