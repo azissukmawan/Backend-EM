@@ -8,6 +8,7 @@ use App\Models\Sertifikat;
 use Illuminate\Http\Request;
 use App\Models\PresensiAcara;
 use App\Helpers\StorageHelper;
+use App\Models\PendaftaranAcara;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\SertifikatGenerator;
 use App\Models\MasterNomorSertifikat;
@@ -24,15 +25,24 @@ class GenerateSertifikatController extends Controller
             return response()->json(['status' => false, 'message' => 'Event tidak ditemukan'], 404);
         }
 
-        $totalHariEvent = $this->hitungTotalHariEvent($event);
+        // Pastikan user terdaftar di event
+        $pendaftaran = PendaftaranAcara::where('modul_acara_id', $event->id)
+            ->where('user_id', $user->id)
+            ->first();
 
-        $jumlahHariHadir = PresensiAcara::where('modul_acara_id', $modulAcaraId)->where('user_id', $user->id)
-            ->distinct()
-            ->count('tanggal_absen');
-
-        if ($jumlahHariHadir < $totalHariEvent) {
-            return response()->json(['status' => false, 'message' => 'Absen tidak lengkap.'], 400);
+        if (!$pendaftaran) {
+            return response()->json(['status' => false, 'message' => 'Anda belum terdaftar di event ini'], 403);
         }
+
+        // $totalHariEvent = $this->hitungTotalHariEvent($event);
+
+        // $jumlahHariHadir = PresensiAcara::where('modul_acara_id', $modulAcaraId)->where('user_id', $user->id)
+        //     ->distinct()
+        //     ->count('tanggal_absen');
+
+        // if ($jumlahHariHadir < $totalHariEvent) {
+        //     return response()->json(['status' => false, 'message' => 'Absen tidak lengkap.'], 400);
+        // }
 
         // kalau sudah punya sertifikat, langsung balikin
         $existing = Sertifikat::where('user_id', $user->id)->where('modul_acara_id', $modulAcaraId)->first();
