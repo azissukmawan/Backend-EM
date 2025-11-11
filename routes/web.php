@@ -23,5 +23,5 @@ Route::get('/preview-reset-password-email', function () {
 });
 
 Route::get('/info', function () {
-    phpinfo();
+    dd(phpinfo());
 });
