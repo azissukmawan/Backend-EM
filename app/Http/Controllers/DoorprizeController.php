@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 class DoorprizeController extends Controller
 {
     /**
-     * Draw a winner for doorprize from registered participants of an event.
+     * Draw a winner for doorprize from participants who attended a specific session and day.
      *
      * @param Request $request
      * @param int $eventId
@@ -34,27 +34,43 @@ class DoorprizeController extends Controller
             ], 400);
         }
 
-        // Get all registered participants who haven't won doorprize yet AND have checked in with status 'Hadir'
-        $participants = DB::table('pendaftaran_acara')
-            ->join('presensi_acara', function($join) use ($eventId) {
-                $join->on('pendaftaran_acara.modul_acara_id', '=', 'presensi_acara.modul_acara_id')
-                     ->on('pendaftaran_acara.user_id', '=', 'presensi_acara.user_id');
-            })
-            ->where('pendaftaran_acara.modul_acara_id', $eventId)
-            ->where('pendaftaran_acara.has_doorprize', false)
-            ->where('presensi_acara.status', 'Hadir')
-            ->pluck('pendaftaran_acara.user_id')
-            ->toArray();
+        // Get sesi_acara from the event's mdl_sesi_acara
+        $sesiAcara = $event->mdl_sesi_acara;
 
-        if (empty($participants)) {
+        // Get today's date
+        $today = now()->format('Y-m-d');
+
+        // Get all participants who attended the event TODAY with the current session
+        // and haven't won doorprize yet
+        $participantsData = DB::table('presensi_acara')
+            ->join('pendaftaran_acara', function($join) {
+                $join->on('presensi_acara.modul_acara_id', '=', 'pendaftaran_acara.modul_acara_id')
+                     ->on('presensi_acara.user_id', '=', 'pendaftaran_acara.user_id');
+            })
+            ->where('presensi_acara.modul_acara_id', $eventId)
+            ->where('presensi_acara.sesi_acara', $sesiAcara)
+            ->whereDate('presensi_acara.tanggal_absen', $today)
+            ->where('presensi_acara.status', 'Hadir')
+            ->where('pendaftaran_acara.has_doorprize', false)
+            ->select('presensi_acara.user_id', 'presensi_acara.tanggal_absen', 'presensi_acara.sesi_acara')
+            ->get();
+
+        if ($participantsData->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No eligible participants for doorprize.'
+                'message' => "No eligible participants for doorprize in session {$sesiAcara} today ({$today}).",
+                'debug_info' => [
+                    'sesi_acara' => $sesiAcara,
+                    'tanggal_absen' => $today,
+                    'event_id' => $eventId
+                ]
             ], 400);
         }
 
         // Randomly select a winner
-        $winnerId = $participants[array_rand($participants)];
+        $winnerData = $participantsData->random();
+        $winnerId = $winnerData->user_id;
+        $tanggalAbsen = $winnerData->tanggal_absen;
 
         // Update the winner's has_doorprize to true
         DB::table('pendaftaran_acara')
@@ -78,18 +94,25 @@ class DoorprizeController extends Controller
                 'event' => [
                     'id' => $event->id,
                     'name' => $event->mdl_nama,
-                ]
+                ],
+                'session_info' => [
+                    'tanggal_absen' => $tanggalAbsen,
+                    'sesi_acara' => $sesiAcara,
+                ],
+                'total_eligible_participants' => $participantsData->count()
             ]
         ]);
     }
 
     /**
      * Get all winners for a specific event.
+     * Optional: Filter by session and date.
      *
+     * @param Request $request
      * @param int $eventId
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getWinners($eventId)
+    public function getWinners(Request $request, $eventId)
     {
         // Check if user is superadmin
         if (!Auth::check() || Auth::user()->role !== 'superadmin') {
@@ -102,12 +125,37 @@ class DoorprizeController extends Controller
         // Validate that the event exists
         $event = ModulAcara::findOrFail($eventId);
 
-        // Get all winners for this event
-        $winners = DB::table('pendaftaran_acara')
+        // Build query for winners
+        $query = DB::table('pendaftaran_acara')
             ->join('users', 'pendaftaran_acara.user_id', '=', 'users.id')
             ->where('pendaftaran_acara.modul_acara_id', $eventId)
-            ->where('pendaftaran_acara.has_doorprize', true)
-            ->select(
+            ->where('pendaftaran_acara.has_doorprize', true);
+
+        // Optional filters
+        $filters = [];
+        if ($request->has('tanggal_absen')) {
+            $filters['tanggal_absen'] = $request->tanggal_absen;
+        }
+        if ($request->has('sesi_acara')) {
+            $filters['sesi_acara'] = $request->sesi_acara;
+        }
+
+        // If filters are provided, join with presensi_acara to filter by session/date
+        if (!empty($filters)) {
+            $query->join('presensi_acara', function($join) use ($filters) {
+                $join->on('pendaftaran_acara.modul_acara_id', '=', 'presensi_acara.modul_acara_id')
+                     ->on('pendaftaran_acara.user_id', '=', 'presensi_acara.user_id');
+
+                if (isset($filters['tanggal_absen'])) {
+                    $join->where('presensi_acara.tanggal_absen', '=', $filters['tanggal_absen']);
+                }
+                if (isset($filters['sesi_acara'])) {
+                    $join->where('presensi_acara.sesi_acara', '=', $filters['sesi_acara']);
+                }
+            });
+        }
+
+        $winners = $query->select(
                 'users.id',
                 'users.name',
                 'users.username',
@@ -115,7 +163,7 @@ class DoorprizeController extends Controller
                 'pendaftaran_acara.waktu_daftar',
                 'pendaftaran_acara.metode_daftar'
             )
-            ->orderBy('pendaftaran_acara.updated_at', 'desc') // Assuming updated_at is when they won
+            ->orderBy('pendaftaran_acara.updated_at', 'desc')
             ->get();
 
         return response()->json([
@@ -127,6 +175,7 @@ class DoorprizeController extends Controller
                     'name' => $event->mdl_nama,
                     'doorprize_active' => $event->mdl_doorprize_aktif,
                 ],
+                'filters' => $filters,
                 'winners' => $winners,
                 'total_winners' => $winners->count()
             ]
