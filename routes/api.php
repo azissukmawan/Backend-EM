@@ -101,6 +101,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     // Admin routes for managing participant & stats
     Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
+    // Admin: update/create presensi peserta secara manual
+    Route::post('/admin/events/{eventId}/participants/{userId}/attendance', [PresensiController::class, 'storeByAdmin']);
     Route::get('/admin/events/{eventId}/stats', [EventStatisticController::class, 'show']);
     Route::get('/dashboard-admin/stats', [DashboardAdminController::class, 'stats']);
 

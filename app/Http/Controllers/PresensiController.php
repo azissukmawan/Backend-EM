@@ -151,6 +151,170 @@ class PresensiController extends Controller
     }
 
     /**
+     * Admin dapat menandai/ubah presensi peserta secara manual
+     * Endpoint: POST /api/admin/events/{eventId}/participants/{userId}/attendance
+     */
+    public function storeByAdmin(Request $request, $eventId, $userId)
+    {
+        $admin = $request->user();
+
+        if (!$admin || !$admin->detailAdmin) {
+            return response()->json(['status' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        $event = ModulAcara::find($eventId);
+        if (!$event) {
+            return response()->json(['status' => false, 'message' => 'Event tidak ditemukan'], 404);
+        }
+
+        $validated = $request->validate([
+            'session' => ['required', 'integer', 'min:1'],
+            'status' => ['sometimes', 'in:Hadir,Belum Hadir'],
+            'date' => ['sometimes', 'date'],
+        ]);
+
+        $pendaftaran = PendaftaranAcara::where('modul_acara_id', $event->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$pendaftaran) {
+            return response()->json(['status' => false, 'message' => 'Peserta tidak terdaftar pada event ini'], 404);
+        }
+
+        $sudahAbsenHariIni = PresensiAcara::where('modul_acara_id', $event->id)
+            ->where('user_id', $userId)
+            ->where('sesi_acara', $validated['session'])
+            ->whereDate('tanggal_absen', $validated['date'])
+            ->first();
+
+        if ($sudahAbsenHariIni) {
+            return response()->json(['status' => false, 'message' => "Peserta sudah melakukan presensi sesi ke-{$sudahAbsenHariIni->sesi_acara}."], 400);
+        }
+
+        // $maxSessions = (int) ($event->mdl_sesi_acara ?? 0);
+        // if ($maxSessions > 0 && $validated['session'] > $maxSessions) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => "Nilai sesi di luar rentang event (maksimal {$maxSessions}).",
+        //     ], 422);
+        // }
+
+        [$attendanceDate, $attendanceDay] = $this->resolveAttendanceDate($event, $validated['day'] ?? null, $validated['date'] ?? null);
+
+        if (!$attendanceDate) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tanggal presensi tidak valid atau di luar rentang event.',
+            ], 422);
+        }
+
+        $status = $validated['status'] ?? 'Hadir';
+
+        // $waktuAbsen = isset($validated[''])
+        //     ? \Carbon\Carbon::parse("{$attendanceDate} {$validated['time']}")
+        //     : \Carbon\Carbon::now();
+
+        // $existing = PresensiAcara::where('modul_acara_id', $event->id)
+        //     ->where('user_id', $userId)
+        //     ->where('sesi_acara', $validated['session'])
+        //     ->whereDate('tanggal_absen', $attendanceDate)
+        //     ->first();
+
+        // if ($existing) {
+        //     $existing->update([
+        //         'status' => $status,
+        //         'waktu_absen' => $waktuAbsen,
+        //         'tanggal_absen' => $attendanceDate,
+        //     ]);
+
+        //     return response()->json([
+        //         'status' => true,
+        //         'message' => 'Presensi peserta diperbarui.',
+        //         'data' => [
+        //             'attendance_id' => $existing->id,
+        //             'user_id' => $userId,
+        //             'event_id' => $event->id,
+        //             'session' => (int) $validated['session'],
+        //             'day' => $attendanceDay,
+        //             'date' => $attendanceDate,
+        //             'status' => $status,
+        //         ],
+        //     ]);
+        // }
+
+        $presensi = PresensiAcara::create([
+            'pendaftaran_acara_id' => $pendaftaran->id,
+            'modul_acara_id' => $event->id,
+            'user_id' => $userId,
+            'waktu_absen' => now(),
+            'sesi_acara' => $validated['session'],
+            'tanggal_absen' => $validated['date'],
+            'status' => $status,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => "Presensi peserta berhasil dicatat untuk sesi {$presensi->sesi_acara}.",
+            'data' => [
+                'attendance_id' => $presensi->id,
+                'user_id' => $userId,
+                'event_id' => $event->id,
+                'session' => $presensi->sesi_acara,
+                'date' => $presensi->tanggal_absen,
+                'status' => $presensi->status,
+            ],
+        ]);
+    }
+
+    private function resolveAttendanceDate($event, ?int $day, ?string $dateInput): array
+    {
+        if ($day !== null) {
+            if (!$event->mdl_acara_mulai) {
+                return [null, null];
+            }
+
+            $startDate = \Carbon\Carbon::parse($event->mdl_acara_mulai)->startOfDay();
+            $endDate = $event->mdl_acara_selesai
+                ? \Carbon\Carbon::parse($event->mdl_acara_selesai)->startOfDay()
+                : $startDate;
+
+            if ($endDate->lt($startDate)) {
+                $endDate = $startDate->copy();
+            }
+
+            $dayCount = $startDate->diffInDays($endDate) + 1;
+            if ($day < 1 || $day > $dayCount) {
+                return [null, null];
+            }
+
+            $date = $startDate->copy()->addDays($day - 1)->toDateString();
+            return [$date, $day];
+        }
+
+        if ($dateInput) {
+            $date = \Carbon\Carbon::parse($dateInput)->toDateString();
+            $dayNumber = null;
+
+            if ($event->mdl_acara_mulai) {
+                $startDate = \Carbon\Carbon::parse($event->mdl_acara_mulai)->startOfDay();
+                $dayNumber = \Carbon\Carbon::parse($date)->diffInDays($startDate) + 1;
+            }
+
+            return [$date, $dayNumber];
+        }
+
+        $date = \Carbon\Carbon::now()->toDateString();
+        $dayNumber = null;
+
+        if ($event->mdl_acara_mulai) {
+            $startDate = \Carbon\Carbon::parse($event->mdl_acara_mulai)->startOfDay();
+            $dayNumber = \Carbon\Carbon::parse($date)->diffInDays($startDate) + 1;
+        }
+
+        return [$date, $dayNumber];
+    }
+
+    /**
      * Hitung total hari periode event
      * Menghitung berapa hari event berlangsung (dari mdl_acara_mulai sampai mdl_acara_selesai)
      */
