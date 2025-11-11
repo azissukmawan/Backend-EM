@@ -263,7 +263,7 @@ class PendaftaranAcaraController extends Controller
             ->with([
                 // relasi event (acara)
                 'presensi',
-                'modulAcara:id,mdl_kode,mdl_slug,mdl_nama,mdl_kategori,mdl_tipe,mdl_lokasi,mdl_acara_mulai,mdl_acara_selesai,mdl_status,mdl_banner_acara,mdl_kode_qr,mdl_file_acara,mdl_file_rundown,mdl_template_sertifikat',
+                'modulAcara:id,mdl_kode,mdl_slug,mdl_nama,mdl_kategori,mdl_tipe,mdl_lokasi,mdl_acara_mulai,mdl_acara_selesai,mdl_status,mdl_banner_acara,mdl_kode_qr,mdl_file_acara,mdl_file_rundown,mdl_template_sertifikat,mdl_link_wa',
                 // relasi profil user (ringan)
                 'user:id,name,telp',
             ])
