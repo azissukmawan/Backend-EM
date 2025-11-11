@@ -100,6 +100,7 @@ class EventParticipantController extends Controller
                         'status' => $status,
                         'hari_ke' => $hari_ke,
                         'sesi_acara' => $sesi,
+                        'tanggal_sesi' => $date,
                         'doorprize' => (bool) $item->has_doorprize,
                     ];
                 }
