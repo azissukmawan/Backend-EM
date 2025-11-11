@@ -33,6 +33,6 @@ class PendaftaranAcara extends Model
 
     public function presensi()
     {
-        return $this->hasOne(PresensiAcara::class, 'pendaftaran_acara_id');
+        return $this->hasMany(PresensiAcara::class, 'pendaftaran_acara_id');
     }
 }
