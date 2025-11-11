@@ -21,3 +21,7 @@ Route::get('/preview-reset-password-email', function () {
         'userName' => 'John Doe'
     ]);
 });
+
+Route::get('/info', function () {
+    phpinfo();
+});
