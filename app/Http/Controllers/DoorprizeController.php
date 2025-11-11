@@ -125,9 +125,14 @@ class DoorprizeController extends Controller
         // Validate that the event exists
         $event = ModulAcara::findOrFail($eventId);
 
-        // Build query for winners
+        // Build query for winners - always join with presensi_acara to get session info
         $query = DB::table('pendaftaran_acara')
             ->join('users', 'pendaftaran_acara.user_id', '=', 'users.id')
+            ->join('presensi_acara', function($join) {
+                $join->on('pendaftaran_acara.modul_acara_id', '=', 'presensi_acara.modul_acara_id')
+                     ->on('pendaftaran_acara.user_id', '=', 'presensi_acara.user_id')
+                     ->where('presensi_acara.status', '=', 'Hadir');
+            })
             ->where('pendaftaran_acara.modul_acara_id', $eventId)
             ->where('pendaftaran_acara.has_doorprize', true);
 
@@ -135,24 +140,11 @@ class DoorprizeController extends Controller
         $filters = [];
         if ($request->has('tanggal_absen')) {
             $filters['tanggal_absen'] = $request->tanggal_absen;
+            $query->whereDate('presensi_acara.tanggal_absen', $request->tanggal_absen);
         }
         if ($request->has('sesi_acara')) {
             $filters['sesi_acara'] = $request->sesi_acara;
-        }
-
-        // If filters are provided, join with presensi_acara to filter by session/date
-        if (!empty($filters)) {
-            $query->join('presensi_acara', function($join) use ($filters) {
-                $join->on('pendaftaran_acara.modul_acara_id', '=', 'presensi_acara.modul_acara_id')
-                     ->on('pendaftaran_acara.user_id', '=', 'presensi_acara.user_id');
-
-                if (isset($filters['tanggal_absen'])) {
-                    $join->where('presensi_acara.tanggal_absen', '=', $filters['tanggal_absen']);
-                }
-                if (isset($filters['sesi_acara'])) {
-                    $join->where('presensi_acara.sesi_acara', '=', $filters['sesi_acara']);
-                }
-            });
+            $query->where('presensi_acara.sesi_acara', $request->sesi_acara);
         }
 
         $winners = $query->select(
@@ -161,7 +153,9 @@ class DoorprizeController extends Controller
                 'users.username',
                 'users.email',
                 'pendaftaran_acara.waktu_daftar',
-                'pendaftaran_acara.metode_daftar'
+                'pendaftaran_acara.metode_daftar',
+                'presensi_acara.sesi_acara',
+                'presensi_acara.tanggal_absen'
             )
             ->orderBy('pendaftaran_acara.updated_at', 'desc')
             ->get();
