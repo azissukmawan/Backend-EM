@@ -114,6 +114,28 @@ class MasterNomorSertifikatController extends Controller
         ], 201);
     }
 
+    public function get($eventId)
+    {
+        $masterNomorSurat = MasterNomorSertifikat::where('modul_acara_id', $eventId)->first();
+
+        if (!$masterNomorSurat) {
+            return response()->json(['status' => false, 'message' => 'Master Nomor tidak ditemukan/belum digenerate'], 404);
+        }
+
+        $payload = [
+            'nomor_sk'            => $masterNomorSurat->nomor_sk,
+            'tanggal_pengesahan'  => $masterNomorSurat->tanggal_pengesahan,
+            'format_nomor'        => $masterNomorSurat->format_nomor,
+            'template_sertifikat' => StorageHelper::getStorageUrl($masterNomorSurat->template_sertifikat),
+        ];
+
+        return response()->json([
+            'success'  => true,
+            'message' => 'Berhasil mendapatkan master nomor sertifikat',
+            'data'    => $payload
+        ], 200);
+    }
+
 
     /**
      * Handle upload template sertifikat
