@@ -99,8 +99,12 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/admin/events/{eventId}/winners', [DoorprizeController::class, 'getWinners']);
     Route::put('/admin/events/{eventId}/winners/{userId}', [DoorprizeController::class, 'deleteWinner']);
 
-    // Admin routes for managing participant & stats
-    Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
+    // Admin routes for managing participant & stats (kehadiran)
+    Route::get('/admin/events/{id}/attendance', [EventParticipantController::class, 'index']);
+
+    // Get all participants (tanpa status kehadiran)
+    Route::get('admin/events/{id}/all-participants', [EventParticipantController::class, 'listParticipants']);
+
     // Admin: update/create presensi peserta secara manual
     Route::post('/admin/events/{eventId}/participants/{userId}/attendance', [PresensiController::class, 'storeByAdmin']);
     Route::get('/admin/events/{eventId}/stats', [EventStatisticController::class, 'show']);
