@@ -79,6 +79,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::delete('/admin/events/{id}', [ModulAcaraController::class, 'destroy']);
 
     Route::post('/admin/events/{id}/generate-nomor-sertifikat', [MasterNomorSertifikatController::class, 'store']);
+    Route::get('/admin/events/{id}/get-nomor-sertifikat', [MasterNomorSertifikatController::class, 'get']);
 
     // Admin routes - manage users
     Route::get('/admin/users', [ManageUsersController::class, 'index']);
