@@ -129,6 +129,7 @@ Route::middleware(['auth:sanctum', 'peserta'])->group(function () {
     Route::post('/events/{eventId}/daftar', [PendaftaranAcaraController::class, 'daftar']);
     Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
     Route::get('/me/pendaftaran', [PendaftaranAcaraController::class, 'listSaya']);
+    Route::get('/me/pendaftaran-mobile', [PendaftaranAcaraController::class, 'listSayaMobile']);
     Route::get('events/{eventId}/me', [PendaftaranAcaraController::class, 'detailEventSaya']);
     Route::post('/events/{eventid}/generate-sertif', [GenerateSertifikatController::class, 'generateNomorSertifikat']);
 

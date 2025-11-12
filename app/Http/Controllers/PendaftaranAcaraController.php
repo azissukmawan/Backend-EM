@@ -368,6 +368,128 @@ class PendaftaranAcaraController extends Controller
         ]);
     }
 
+    public function listSayaMobile(Request $request)
+    {
+        $user = auth()->user();
+
+        if ($user->role !== 'peserta') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya peserta yang dapat melihat daftar pendaftarannya.',
+            ], 403);
+        }
+
+        // Query param opsional: ?per_page=10
+        $perPage = (int) $request->query('per_page', 10);
+
+        $pendaftaran = PendaftaranAcara::query()
+            ->with([
+                // relasi event (acara)
+                'presensi',
+                'modulAcara:id,mdl_kode,mdl_slug,mdl_nama,mdl_kategori,mdl_tipe,mdl_lokasi,mdl_acara_mulai,mdl_acara_selesai,mdl_status,mdl_banner_acara,mdl_kode_qr,mdl_file_acara,mdl_file_rundown,mdl_template_sertifikat,mdl_link_wa,mdl_doorprize_aktif,mdl_sesi_acara',
+            ])
+            ->where('user_id', $user->id)
+            ->orderByDesc('waktu_daftar')
+            ->paginate($perPage);
+
+        // Transform data untuk menambahkan URL lengkap pada media dan presensi per hari
+        $pendaftaran->getCollection()->transform(function ($item) {
+            if ($item->modulAcara) {
+                // Tambahkan URL lengkap untuk media files
+                $item->modulAcara->mdl_banner_acara_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_banner_acara);
+                $item->modulAcara->mdl_file_acara_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_file_acara);
+                $item->modulAcara->mdl_file_rundown_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_file_rundown);
+                $item->modulAcara->mdl_template_sertifikat_url  = StorageHelper::getStorageUrl($item->modulAcara->mdl_template_sertifikat);
+
+                // Hitung durasi event dalam hari
+                $mulai = \Carbon\Carbon::parse($item->modulAcara->mdl_acara_mulai);
+                $selesai = \Carbon\Carbon::parse($item->modulAcara->mdl_acara_selesai);
+                $totalHari = (int) ceil($mulai->floatDiffInDays($selesai)) + 1;
+
+                // Ambil total sesi dari mdl_sesi_acara, atau dari data presensi jika ada
+                $totalSesiFromDB = (int) ($item->modulAcara->mdl_sesi_acara ?? 1);
+
+                // Jika ada data presensi, hitung sesi maksimal dari presensi
+                $maxSesiFromPresensi = 0;
+                if ($item->presensi && $item->presensi->isNotEmpty()) {
+                    foreach ($item->presensi as $p) {
+                        if ($p->sesi_acara > $maxSesiFromPresensi) {
+                            $maxSesiFromPresensi = $p->sesi_acara;
+                        }
+                    }
+                }
+
+                // Gunakan nilai terbesar antara DB dan presensi
+                $totalSesi = max($totalSesiFromDB, $maxSesiFromPresensi);
+
+                // Buat map presensi dari database untuk lookup cepat
+                $presensiMap = [];
+                if ($item->presensi && $item->presensi->isNotEmpty()) {
+                    foreach ($item->presensi as $p) {
+                        $tanggal = \Carbon\Carbon::parse($p->tanggal_absen)->format('Y-m-d');
+                        $sesi = $p->sesi_acara;
+                        $key = $tanggal . '_' . $sesi;
+                        $presensiMap[$key] = $p;
+                    }
+                }
+
+                // Build presensi dalam format array of arrays
+                $presensiArray = [];
+                $currentDate = $mulai->copy();
+
+                for ($hariKe = 1; $hariKe <= $totalHari; $hariKe++) {
+                    $tanggal = $currentDate->format('Y-m-d');
+                    $sesiPerHari = [];
+
+                    // Loop semua sesi di hari ini
+                    for ($sesiKe = 1; $sesiKe <= $totalSesi; $sesiKe++) {
+                        $key = $tanggal . '_' . $sesiKe;
+
+                        // Data presensi peserta (sederhana untuk POV peserta)
+                        $pesertaData = [
+                            'hari_ke' => $hariKe,
+                            'sesi_acara' => $sesiKe,
+                        ];
+
+                        if (isset($presensiMap[$key])) {
+                            // Ada data presensi di database
+                            $p = $presensiMap[$key];
+                            $pesertaData['status'] = $p->status ?? 'Hadir';
+                            $pesertaData['tanggal_sesi'] = \Carbon\Carbon::parse($p->tanggal_absen)->format('Y-m-d');
+                        } else {
+                            // Tidak ada data presensi
+                            $pesertaData['status'] = 'Belum Hadir';
+                            $pesertaData['tanggal_sesi'] = $tanggal;
+                        }
+
+                        $sesiPerHari[] = $pesertaData;
+                    }
+
+                    $presensiArray[] = $sesiPerHari;
+                    $currentDate->addDay();
+                }
+
+                // Tambahkan ke modulAcara
+                $item->modulAcara->presensi = $presensiArray;
+                $item->modulAcara->total_hari = $totalHari;
+                $item->modulAcara->total_sesi = $totalSesi;
+            }
+
+            // Hapus relasi presensi yang lama (karena sudah di-transform)
+            unset($item->presensi);
+
+            return $item;
+        });
+
+
+        // Response rapi (tetap simpel)
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar Acara Anda.',
+            'data' => $pendaftaran,
+        ]);
+    }
+
     public function detailEventSaya(Request $request, $eventid)
     {
         $user = auth()->user();
