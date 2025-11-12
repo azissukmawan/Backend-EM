@@ -8,6 +8,56 @@ use Illuminate\Http\Request;
 
 class EventParticipantController extends Controller
 {
+
+    public function listParticipants(Request $request, $eventId)
+    {
+        if (!$request->user() || $request->user()->role !== 'superadmin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $query = PendaftaranAcara::with([
+            'user.detailPeserta',
+            'modulAcara',
+        ])->where('modul_acara_id', $eventId);
+
+        // Pagination opsional
+        if ($request->has('per_page')) {
+            $participants = $query->paginate($request->get('per_page', 10));
+        } else {
+            $participants = $query->get();
+        }
+
+        // Transformasi data peserta saja (tanpa status kehadiran)
+        $data = [];
+        foreach ($participants as $item) {
+            $data[] = [
+                'id' => $item->id,
+                'nama' => $item->user->name ?? '-',
+                'email' => $item->user->email ?? '-',
+                'no_whatsapp' => $item->user->telp ?? '-',
+                'photo_profile' => StorageHelper::getStorageUrl($item->user->detailPeserta?->foto),
+                'type' => $item->modulAcara ? ($item->modulAcara->mdl_tipe === 'hybrid' ? $item->tipe_kehadiran : $item->modulAcara->mdl_tipe) : '-',
+                'doorprize' => (bool) $item->has_doorprize,
+            ];
+        }
+
+        // Response dengan atau tanpa pagination
+        $response = [
+            'success' => true,
+            'data' => $data,
+        ];
+        if ($participants instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+            $response['meta'] = [
+                'current_page' => $participants->currentPage(),
+                'last_page' => $participants->lastPage(),
+                'total' => $participants->total(),
+                'per_page' => $participants->perPage(),
+            ];
+        }
+
+        return response()->json($response);
+    }
+    
     public function index(Request $request, $eventId)
     {
         if (!$request->user() || $request->user()->role !== 'superadmin') {
@@ -100,7 +150,6 @@ class EventParticipantController extends Controller
                         'status' => $status,
                         'hari_ke' => $hari_ke,
                         'sesi_acara' => $sesi,
-                        'tanggal_sesi' => $date,
                         'doorprize' => (bool) $item->has_doorprize,
                     ];
                 }
