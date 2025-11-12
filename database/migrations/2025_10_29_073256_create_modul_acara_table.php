@@ -53,7 +53,7 @@ return new class extends Migration
             $table->string('mdl_file_rundown')->nullable();                // susunan / rundown
             $table->string('mdl_template_sertifikat')->nullable();        // template sertifikat
             $table->boolean('mdl_sertifikat_aktif')->default(false);         // apakah akan terbit sertifikat?
-            $table->boolean('mdl_doorprize_aktif')->default(false);         // apakah akan terbit sertifikat?
+            $table->boolean('mdl_doorprize_aktif')->default(true);         // apakah akan terbit sertifikat?
             $table->string('mdl_banner_acara')->nullable();                // poster/banner promosi
 
             // Catatan
