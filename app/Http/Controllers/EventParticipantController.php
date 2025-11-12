@@ -57,26 +57,26 @@ class EventParticipantController extends Controller
 
         return response()->json($response);
     }
-    
+
     public function index(Request $request, $eventId)
     {
         if (!$request->user() || $request->user()->role !== 'superadmin') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-            $query = PendaftaranAcara::with([
-                'user.detailPeserta',
-                'modulAcara',
-                'presensi' => function ($q) use ($eventId, $request) {
-                    $q->where('modul_acara_id', $eventId);
-                    if ($request->filled('tanggal')) {
-                        $q->whereDate('tanggal_absen', $request->get('tanggal'));
-                    }
-                    if ($request->filled('sesi')) {
-                        $q->where('sesi_acara', $request->get('sesi'));
-                    }
+        $query = PendaftaranAcara::with([
+            'user.detailPeserta',
+            'modulAcara',
+            'presensi' => function ($q) use ($eventId, $request) {
+                $q->where('modul_acara_id', $eventId);
+                if ($request->filled('tanggal')) {
+                    $q->whereDate('tanggal_absen', $request->get('tanggal'));
                 }
-            ])->where('modul_acara_id', $eventId);
+                if ($request->filled('sesi')) {
+                    $q->where('sesi_acara', $request->get('sesi'));
+                }
+            }
+        ])->where('modul_acara_id', $eventId);
 
         // Jika user mengirim parameter per_page -> pakai pagination
         if ($request->has('per_page')) {
@@ -126,7 +126,7 @@ class EventParticipantController extends Controller
                 $data[$hariLabel][$sesiLabel] = [];
                 foreach ($allParticipants as $item) {
                     // Cari presensi peserta pada hari & sesi ini
-                    $presensiPeserta = $presensi->first(function($p) use ($item, $date, $sesi) {
+                    $presensiPeserta = $presensi->first(function ($p) use ($item, $date, $sesi) {
                         return $p->pendaftaran_acara_id == $item->id &&
                             ((is_object($p->tanggal_absen) ? $p->tanggal_absen->format('Y-m-d') : (string)$p->tanggal_absen) === $date) &&
                             $p->sesi_acara == $sesi;
@@ -142,6 +142,7 @@ class EventParticipantController extends Controller
                     $status = $presensiPeserta ? ($presensiPeserta->status ?? 'Hadir') : 'Belum Hadir';
                     $data[$hariLabel][$sesiLabel][] = [
                         'id' => $item->id,
+                        'user_id' => $item->user->id ?? '-',
                         'nama' => $item->user->name ?? '-',
                         'email' => $item->user->email ?? '-',
                         'no_whatsapp' => $item->user->telp ?? '-',
