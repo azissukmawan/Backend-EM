@@ -119,6 +119,7 @@ class EventParticipantController extends Controller
         $data = [];
         foreach ($uniqueDates as $date) {
             $hari_ke = $dateToDay[$date];
+            $tanggalSesi = $date;
             $hariLabel = 'Hari-' . $hari_ke;
             $data[$hariLabel] = [];
             foreach ($uniqueSessions as $sesi) {
@@ -149,6 +150,7 @@ class EventParticipantController extends Controller
                         'photo_profile' => StorageHelper::getStorageUrl($item->user->detailPeserta?->foto),
                         'type' => $type,
                         'status' => $status,
+                        'tanggal_sesi' => $tanggalSesi,
                         'hari_ke' => $hari_ke,
                         'sesi_acara' => $sesi,
                         'doorprize' => (bool) $item->has_doorprize,
