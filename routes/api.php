@@ -94,6 +94,11 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/event/{id}/sesi/toggle', [EventSessionController::class, 'toggle']);
 
 
+    // LIHAT SERTIF PESERTA
+    Route::post('/events/{eventid}/generate-sertif-by-admin', [GenerateSertifikatController::class, 'generateNomorSertifikatByAdmin']);
+
+
+
 
     // Doorprize routes
     Route::post('/admin/events/{eventId}/draw-winner', [DoorprizeController::class, 'drawWinner']);
