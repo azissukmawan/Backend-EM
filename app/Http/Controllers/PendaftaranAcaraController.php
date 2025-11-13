@@ -281,7 +281,7 @@ class PendaftaranAcaraController extends Controller
                 // Hitung durasi event dalam hari
                 $mulai = \Carbon\Carbon::parse($item->modulAcara->mdl_acara_mulai);
                 $selesai = \Carbon\Carbon::parse($item->modulAcara->mdl_acara_selesai);
-                $totalHari = (int) ceil($mulai->floatDiffInDays($selesai)) + 1;
+                $totalHari = $mulai->diffInDays($selesai) + 1;
 
                 // Ambil total sesi dari mdl_sesi_acara, atau dari data presensi jika ada
                 $totalSesiFromDB = (int) ($item->modulAcara->mdl_sesi_acara ?? 1);
@@ -404,7 +404,7 @@ class PendaftaranAcaraController extends Controller
                 // Hitung durasi event dalam hari
                 $mulai = \Carbon\Carbon::parse($item->modulAcara->mdl_acara_mulai);
                 $selesai = \Carbon\Carbon::parse($item->modulAcara->mdl_acara_selesai);
-                $totalHari = (int) ceil($mulai->floatDiffInDays($selesai)) + 1;
+                $totalHari = $mulai->diffInDays($selesai) + 1;
 
                 // Ambil total sesi dari mdl_sesi_acara, atau dari data presensi jika ada
                 $totalSesiFromDB = (int) ($item->modulAcara->mdl_sesi_acara ?? 1);
@@ -425,7 +425,7 @@ class PendaftaranAcaraController extends Controller
                 // Buat map presensi dari database untuk lookup cepat
                 $presensiMap = [];
                 if ($item->presensi && $item->presensi->isNotEmpty()) {
-                    foreach ($item->presensi as $p) {
+                     foreach ($item->presensi as $p) {
                         $tanggal = \Carbon\Carbon::parse($p->tanggal_absen)->format('Y-m-d');
                         $sesi = $p->sesi_acara;
                         $key = $tanggal . '_' . $sesi;
@@ -529,7 +529,7 @@ class PendaftaranAcaraController extends Controller
             // Hitung durasi event dalam hari
             $mulai = \Carbon\Carbon::parse($event->modulAcara->mdl_acara_mulai);
             $selesai = \Carbon\Carbon::parse($event->modulAcara->mdl_acara_selesai);
-            $totalHari = (int) ceil($mulai->floatDiffInDays($selesai)) + 1;
+            $totalHari = $mulai->diffInDays($selesai) + 1;
 
             // Ambil total sesi dari mdl_sesi_acara, atau dari data presensi jika ada
             $totalSesiFromDB = (int) ($event->modulAcara->mdl_sesi_acara ?? 1);
