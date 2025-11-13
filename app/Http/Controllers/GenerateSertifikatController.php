@@ -12,6 +12,7 @@ use App\Models\PendaftaranAcara;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\SertifikatGenerator;
 use App\Models\MasterNomorSertifikat;
+use Illuminate\Support\Facades\Storage;
 
 class GenerateSertifikatController extends Controller
 {
@@ -44,17 +45,6 @@ class GenerateSertifikatController extends Controller
         //     return response()->json(['status' => false, 'message' => 'Absen tidak lengkap.'], 400);
         // }
 
-        // kalau sudah punya sertifikat, langsung balikin
-        $existing = Sertifikat::where('user_id', $user->id)->where('modul_acara_id', $modulAcaraId)->first();
-
-        if ($existing) {
-            return response()->json([
-                'status'  => true,
-                'message' => 'Sertifikat sudah digenerate.',
-                'data'    => StorageHelper::getStorageUrl($existing->file_sertifikat),
-            ], 200);
-        }
-
         $masterNomor = MasterNomorSertifikat::where('modul_acara_id', $modulAcaraId)->first();
 
         // jika nomor sk belum di generate admin
@@ -62,6 +52,49 @@ class GenerateSertifikatController extends Controller
             return response()->json(['status' => false, 'message' => 'Sertifikat belum terbit'], 400);
         }
 
+        // kalau sudah punya sertifikat, langsung balikin
+        $existing = Sertifikat::where('user_id', $user->id)->where('modul_acara_id', $modulAcaraId)->first();
+
+        // KALAU NAMA BERUBAH DI TABLE USER, GENERATE ULANG
+        if ($existing && $existing->name_peserta !== $user->name) {
+            $noSertifikat = $existing->kode_sertif;
+
+            $oldPath = $existing->file_sertifikat;
+
+            $fileSertifikat = SertifikatGenerator::generate(
+                templatePath: $masterNomor->template_sertifikat,
+                namaPeserta: $user->name,
+                noSertifikat: $noSertifikat,
+                namaAcara: $event->mdl_nama,
+                // tanggalSertifikat: $tanggalSertifikat
+            );
+
+            if ($oldPath) {
+                Storage::disk('s3')->delete($oldPath);
+            }
+
+            $existing->update([
+                'name_peserta'   => $user->name,
+                'file_sertifikat' => $fileSertifikat,
+            ]);
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Sertifikat Berhasil Di Generate.',
+                'data'    => StorageHelper::getStorageUrl($fileSertifikat),
+            ], 200);
+        }
+
+        // KALAU SUDAH ADA DATA SERTIF DI DB DAN NAMA MASIH SAMA, AMBIL SAJA
+        if ($existing) {
+            return response()->json([
+                'status'  => true,
+                'message' => 'Sertifikat Berhasil Di Unduh.',
+                'data'    => StorageHelper::getStorageUrl($existing->file_sertifikat),
+            ], 200);
+        }
+
+        // KALAU BELUM ADA SAMA SEKALI, GENERATE BARU
         try {
             $filePath = DB::transaction(function () use ($modulAcaraId, $user, $event) {
                 // Kunci row agar tidak tabrakan antar peserta
