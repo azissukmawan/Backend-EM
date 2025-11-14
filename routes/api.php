@@ -27,7 +27,7 @@ Route::get('/events/upcoming', [EventController::class, 'upcoming']); // Event A
 Route::get('/events/past', [EventController::class, 'past']); // Event SUDAH SELESAI
 Route::get('/events/{identifier}', [EventController::class, 'show']); // Detail event by ID or slug
 Route::get('/events/{identifier}/mobile', [EventController::class, 'showMobile']); // Detail event by ID or slug
-Route::get('/events/{id}/participants', [EventParticipantController::class, 'index']);
+Route::get('/events/{id}/participants', [EventParticipantController::class, 'index  ']);
 
 // Auth routes
 // Auth routes - Register (rate limited)
@@ -106,7 +106,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/events/{eventId}/winners/{userId}', [DoorprizeController::class, 'deleteWinner']);
 
     // Admin routes for managing participant & stats (kehadiran)
-    Route::get('/admin/events/{id}/attendance', [EventParticipantController::class, 'index']);
+    Route::get('/admin/events/{id}/attendance', [EventParticipantController::class, 'indexV2']);
 
     // Get all participants (tanpa status kehadiran)
     Route::get('admin/events/{id}/all-participants', [EventParticipantController::class, 'listParticipants']);
