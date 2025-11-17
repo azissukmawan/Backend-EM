@@ -27,7 +27,7 @@ Route::get('/events/upcoming', [EventController::class, 'upcoming']); // Event A
 Route::get('/events/past', [EventController::class, 'past']); // Event SUDAH SELESAI
 Route::get('/events/{identifier}', [EventController::class, 'show']); // Detail event by ID or slug
 Route::get('/events/{identifier}/mobile', [EventController::class, 'showMobile']); // Detail event by ID or slug
-Route::get('/events/{id}/participants', [EventParticipantController::class, 'index']);
+Route::get('/events/{id}/participants', [EventParticipantController::class, 'index  ']);
 
 // Auth routes
 // Auth routes - Register (rate limited)
@@ -79,6 +79,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::delete('/admin/events/{id}', [ModulAcaraController::class, 'destroy']);
 
     Route::post('/admin/events/{id}/generate-nomor-sertifikat', [MasterNomorSertifikatController::class, 'store']);
+    Route::get('/admin/events/{id}/get-nomor-sertifikat', [MasterNomorSertifikatController::class, 'get']);
 
     // Admin routes - manage users
     Route::get('/admin/users', [ManageUsersController::class, 'index']);
@@ -93,14 +94,23 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/event/{id}/sesi/toggle', [EventSessionController::class, 'toggle']);
 
 
+    // LIHAT SERTIF PESERTA
+    Route::post('/events/{eventid}/generate-sertif-by-admin', [GenerateSertifikatController::class, 'generateNomorSertifikatByAdmin']);
+
+
+
 
     // Doorprize routes
     Route::post('/admin/events/{eventId}/draw-winner', [DoorprizeController::class, 'drawWinner']);
     Route::get('/admin/events/{eventId}/winners', [DoorprizeController::class, 'getWinners']);
     Route::put('/admin/events/{eventId}/winners/{userId}', [DoorprizeController::class, 'deleteWinner']);
 
-    // Admin routes for managing participant & stats
-    Route::get('/admin/events/{id}/participants', [EventParticipantController::class, 'index']);
+    // Admin routes for managing participant & stats (kehadiran)
+    Route::get('/admin/events/{id}/attendance', [EventParticipantController::class, 'indexV2']);
+
+    // Get all participants (tanpa status kehadiran)
+    Route::get('admin/events/{id}/all-participants', [EventParticipantController::class, 'listParticipants']);
+
     // Admin: update/create presensi peserta secara manual
     Route::post('/admin/events/{eventId}/participants/{userId}/attendance', [PresensiController::class, 'storeByAdmin']);
     Route::get('/admin/events/{eventId}/stats', [EventStatisticController::class, 'show']);
@@ -124,7 +134,9 @@ Route::middleware(['auth:sanctum', 'peserta'])->group(function () {
     // Pendaftaran Acara - Untuk peserta
     Route::post('/events/{eventId}/daftar', [PendaftaranAcaraController::class, 'daftar']);
     Route::delete('/events/{eventId}/batal-daftar', [PendaftaranAcaraController::class, 'batalDaftar']);
-    Route::get('/me/pendaftaran', [PendaftaranAcaraController::class, 'listSaya']);
+    Route::get('/me/pendaftaran', [PendaftaranAcaraController::class, 'listSayaV2']);
+    // Route::get('/me/pendaftaran-V2', [PendaftaranAcaraController::class, 'listSayaV2']);
+    Route::get('/me/pendaftaran-mobile', [PendaftaranAcaraController::class, 'listSayaMobileV2']);
     Route::get('events/{eventId}/me', [PendaftaranAcaraController::class, 'detailEventSaya']);
     Route::post('/events/{eventid}/generate-sertif', [GenerateSertifikatController::class, 'generateNomorSertifikat']);
 

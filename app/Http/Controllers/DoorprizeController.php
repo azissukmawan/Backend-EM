@@ -125,13 +125,19 @@ class DoorprizeController extends Controller
         // Validate that the event exists
         $event = ModulAcara::findOrFail($eventId);
 
-        // Build query for winners - always join with presensi_acara to get session info
+        // Get current session from event
+        $sesiAcara = $event->mdl_sesi_acara;
+        $today = now()->format('Y-m-d');
+
+        // Build query for winners - join with specific presensi to avoid duplicates
         $query = DB::table('pendaftaran_acara')
             ->join('users', 'pendaftaran_acara.user_id', '=', 'users.id')
-            ->join('presensi_acara', function($join) {
+            ->join('presensi_acara', function($join) use ($sesiAcara, $today) {
                 $join->on('pendaftaran_acara.modul_acara_id', '=', 'presensi_acara.modul_acara_id')
                      ->on('pendaftaran_acara.user_id', '=', 'presensi_acara.user_id')
-                     ->where('presensi_acara.status', '=', 'Hadir');
+                     ->where('presensi_acara.status', '=', 'Hadir')
+                     ->where('presensi_acara.sesi_acara', '=', $sesiAcara)
+                     ->whereDate('presensi_acara.tanggal_absen', '=', $today);
             })
             ->where('pendaftaran_acara.modul_acara_id', $eventId)
             ->where('pendaftaran_acara.has_doorprize', true);
