@@ -2,6 +2,10 @@
 
 Backend API untuk Event Management System menggunakan Laravel 12 dengan fitur authentication dan landing page.
 
+# Documentation endpoint
+
+https://documenter.getpostman.com/view/49615429/2sB3WmV419
+
 ## 🔐 Security Features
 
 Aplikasi ini dilengkapi dengan fitur keamanan komprehensif:
