@@ -90,6 +90,13 @@ php artisan migrate
 php artisan serve
 ```
 
+8. Account Super Admin in host:
+```bash
+username: asep
+email: superadmin5@example.com
+password: passwordAdmin
+```
+
 ## 🔑 Main Features
 
 ### Authentication API
